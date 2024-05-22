@@ -22,10 +22,6 @@ def main():
                 drawBoard = True
 
 
-            mx, my = pygame.mouse.get_pos()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    game.check_click(mx, my)
 
             if drawBoard:
                 game.draw_field()
