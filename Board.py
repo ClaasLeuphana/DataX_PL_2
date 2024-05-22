@@ -1,4 +1,5 @@
 import pygame
+import GameAssets
 
 # pygame.init()
 screen = pygame.display.set_mode((500, 600), pygame.RESIZABLE)
@@ -10,23 +11,23 @@ current_player = 1
 cards_Player1 = [(True, "null") for _ in range(12)] # List of all cards of player , each card is a tuple with a boolean and a string, the boolean is True if the card is visible, False if not and the string is the Value of the card
 cards_Player2 = [(True, "null") for _ in range(12)]
 
-Board = pygame.image.load("C:\\Users\\claas\\.Dev\\Leuphana\\Datax\\MainProject\\Grafiken\\Board.png")
-CardBack = pygame.image.load("C:\\Users\\claas\\.Dev\\Leuphana\\Datax\\MainProject\\Grafiken\\CardBack.png")
-Card12 = pygame.image.load("C:\\Users\\claas\\.Dev\\Leuphana\\Datax\\MainProject\\Grafiken\\Card12.png")
-Card11 = pygame.image.load("C:\\Users\\claas\\.Dev\\Leuphana\\Datax\\MainProject\\Grafiken\\Card11.png")
-Card10 = pygame.image.load("C:\\Users\\claas\\.Dev\\Leuphana\\Datax\\MainProject\\Grafiken\\Card10.png")
-Card9 = pygame.image.load("C:\\Users\\claas\\.Dev\\Leuphana\\Datax\\MainProject\\Grafiken\\Card9.png")
-Card8 = pygame.image.load("C:\\Users\\claas\\.Dev\\Leuphana\\Datax\\MainProject\\Grafiken\\Card8.png")
-Card7 = pygame.image.load("C:\\Users\\claas\\.Dev\\Leuphana\\Datax\\MainProject\\Grafiken\\Card7.png")
-Card6 = pygame.image.load("C:\\Users\\claas\\.Dev\\Leuphana\\Datax\\MainProject\\Grafiken\\Card6.png")
-Card5 = pygame.image.load("C:\\Users\\claas\\.Dev\\Leuphana\\Datax\\MainProject\\Grafiken\\Card5.png")
-Card4 = pygame.image.load("C:\\Users\\claas\\.Dev\\Leuphana\\Datax\\MainProject\\Grafiken\\Card4.png")
-Card3 = pygame.image.load("C:\\Users\\claas\\.Dev\\Leuphana\\Datax\\MainProject\\Grafiken\\Card3.png")
-Card2 = pygame.image.load("C:\\Users\\claas\\.Dev\\Leuphana\\Datax\\MainProject\\Grafiken\\Card2.png")
-Card1 = pygame.image.load("C:\\Users\\claas\\.Dev\\Leuphana\\Datax\\MainProject\\Grafiken\\Card1.png")
-Card0 = pygame.image.load("C:\\Users\\claas\\.Dev\\Leuphana\\Datax\\MainProject\\Grafiken\\Card0.png")
-CardN1 = pygame.image.load("C:\\Users\\claas\\.Dev\\Leuphana\\Datax\\MainProject\\Grafiken\\CardN1.png")
-CardN2 = pygame.image.load("C:\\Users\\claas\\.Dev\\Leuphana\\Datax\\MainProject\\Grafiken\\CardN2.png")
+Board = GameAssets.GameAssets.Board
+CardBack = GameAssets.GameAssets.CardBack
+Card12 = GameAssets.GameAssets.Card12
+Card11 = GameAssets.GameAssets.Card11
+Card10 = GameAssets.GameAssets.Card10
+Card9 = GameAssets.GameAssets.Card9
+Card8 = GameAssets.GameAssets.Card8
+Card7 = GameAssets.GameAssets.Card7
+Card6 = GameAssets.GameAssets.Card6
+Card5 = GameAssets.GameAssets.Card5
+Card4 = GameAssets.GameAssets.Card4
+Card3 = GameAssets.GameAssets.Card3
+Card2 = GameAssets.GameAssets.Card2
+Card1 = GameAssets.GameAssets.Card1
+Card0 = GameAssets.GameAssets.Card0
+CardN1 = GameAssets.GameAssets.CardN1
+CardN2 = GameAssets.GameAssets.CardN2
 #card draw =[pygame.image.laod("C:\\Users\\claas\\.Dev\\Leuphana\\Datax\\MainProject\\Grafiken\\CDraw1.png"),...,pygame.image.laod("C:\\Users\\claas\\.Dev\\Leuphana\\Datax\\MainProject\\Grafiken\\CDrawx.png")
 #card flip
 #stack cards -> KArtenstapel
