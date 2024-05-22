@@ -3,6 +3,7 @@ import Grafiken
 import os
 
 
+# Funktion um Bilder zu laden
 def load_image(filename):
     return pygame.image.load(os.path.join("Grafiken", filename))
 
