@@ -31,7 +31,7 @@ class Gameplay(State):
 
     def draw_stack(self):
         card_width, card_height, card_gap = self.get_card_measurements()
-        x = self.screen.get_width() / 2 - card_width / 2
+        x = self.screen.get_width() / 2 - (card_width + card_gap / 2)
         y = self.screen.get_height() / 2 - card_height / 2
 
         card_surface = pygame.transform.scale(GameAssets.CardBack, (int(card_width), int(card_height)))
@@ -72,7 +72,7 @@ class Gameplay(State):
 
                 self.screen.blit(card_surface, (x, y))
 
-        pygame.display.flip()
+
 
     def draw(self, surface):
         surface.fill(pygame.Color("blue"))
@@ -81,3 +81,4 @@ class Gameplay(State):
             self.draw_player_hand(i, self.player_count)
 
         self.draw_stack()
+        pygame.display.flip()
