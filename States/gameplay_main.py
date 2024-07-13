@@ -50,21 +50,25 @@ class Gameplay(State):
             rotation_angle = 0  # Keine Rotation
         elif player_index == 1:
             start_x = card_gap
-            start_y = self.screen.get_height() / 2 - (cols / 2) * (card_width + card_gap) + card_width + card_gap
+            start_y = self.screen.get_height() / 2 - (cols / 2) * (card_width + card_gap)+ card_gap
             rotation_angle = 90  # 90 Grad Rotation für die Karten am linken Bildschirmrand
         elif player_index == 2:
             start_x = self.screen.get_width() / 2 - (cols / 2) * (card_width + card_gap)
             start_y = card_gap
             rotation_angle = 0  # Keine Rotation
         elif player_index == 3:
-            start_x = self.screen.get_width() - (cols + 1) * (card_width + card_gap)
+            start_x = self.screen.get_width() - rows * (card_height + card_gap)
             start_y = self.screen.get_height() / 2 - (cols / 2) * (card_width + card_gap)
             rotation_angle = 270  # 270 Grad Rotation für die Karten am rechten Bildschirmrand
 
         for row in range(rows):
             for col in range(cols):
-                x = start_x + col * (card_width + card_gap)
-                y = start_y + row * (card_height + card_gap)
+                if player_index == 0 or player_index == 2:
+                    x = start_x + col * (card_width + card_gap)
+                    y = start_y + row * (card_height + card_gap)
+                else:
+                    x = start_x + row * (card_height + card_gap)
+                    y = start_y + col * (card_width + card_gap)
 
                 card_surface = pygame.transform.scale(GameAssets.CardBack, (int(card_width), int(card_height)))
                 if rotation_angle != 0:
