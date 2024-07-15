@@ -30,15 +30,33 @@ class GameAssets:
         # flip animation
         # deal animation
         # hover animation
+
 class Card:
     def __init__(self, value, visible=False):
-        self.value = value
-        self.visible = visible
+            self.value = value
+            self.visible = visible
 
     def get_image(self):
         if not self.visible:
             return GameAssets.CardBack
-        return getattr(GameAssets, f'Card{self.value}')
+        value_to_image = {
+            -2: GameAssets.CardN2,
+            -1: GameAssets.CardN1,
+            0: GameAssets.Card0,
+            1: GameAssets.Card1,
+            2: GameAssets.Card2,
+            3: GameAssets.Card3,
+            4: GameAssets.Card4,
+            5: GameAssets.Card5,
+            6: GameAssets.Card6,
+            7: GameAssets.Card7,
+            8: GameAssets.Card8,
+            9: GameAssets.Card9,
+            10: GameAssets.Card10,
+            11: GameAssets.Card11,
+            12: GameAssets.Card12
+        }
+        return value_to_image.get(self.value, GameAssets.CardBack)
 
 
 class Deck:
@@ -62,11 +80,21 @@ class Deck:
     def shuffle(self):
         random.shuffle(self.cards)
 
-    def draw_new_card(self):
+    def draw_card(self):
         if self.cards:
             return self.cards.pop()
         else:
             return None
+
+    def turn_top_card(self, stack):
+        if self.cards:
+            top_card = self.cards.pop()
+            top_card.visible = True
+            stack.add_card(top_card)
+
+    def turn_card(self, card):
+        # ToDo
+        return None
 
     def deal(self, playercount):
         players_hands = [[] for _ in range(playercount)]
@@ -74,8 +102,42 @@ class Deck:
             for player_hand in players_hands:
                 player_hand.append(self.draw_card())
         return players_hands
+
     def add_card(self, card):
         self.cards.append(card)
 
     def __len__(self):
         return len(self.cards)
+
+
+class Stack:
+    def __init__(self):
+        self.cards = []
+
+    def add_card(self, card):
+        self.cards.append(card)
+
+
+    def get_top_card(self):
+        if self.cards:
+            return self.cards[-1]
+        return None
+
+    def get_second_top_card(self):
+        if len(self.cards) > 1:
+            return self.cards[-2]
+        # ToDo
+
+    def clear(self):
+        self.cards.clear()
+        # ToDo
+
+    def take_top_card(self):
+        if self.cards:
+            self.cards[-1].visible = not self.cards[-1].visible
+            # ToDo
+
+    def turn_second_top_card(self):
+        if len(self.cards) > 1:
+            self.cards[-2].visible = not self.cards[-2].visible
+            # ToDo
