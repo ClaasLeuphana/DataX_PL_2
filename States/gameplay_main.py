@@ -6,24 +6,19 @@ class Gameplay(State):
     def __init__(self):
         super(Gameplay, self).__init__()
         self.player_count = 1
+        self.current_player = 0
         self.font = pygame.font.Font(None, 50)
         self.screen = pygame.display.get_surface()
         self.screen_rect = self.screen.get_rect()
 
-    def get_card_measurements(self):
-        self.card_width = self.screen.get_width() / 22
-        self.card_height = self.card_width * 1.5
-        self.card_gap = self.card_width / 20
-        return self.card_width, self.card_height, self.card_gap
-
     def startup(self, persistent):
         self.persist = persistent
         self.player_count = self.persist.get('player_count', 1)
+        self.current_player = 0
         self.deck = Deck()
-        self.stack= Stack()
+        self.stack = Stack()
         self.players_hands = self.deck.deal(self.player_count)
         self.deck.turn_top_card(self.stack)
-
 
         for i, hand in enumerate(self.players_hands):
             print(f"Spieler {i + 1}: {[card.value for card in hand]}")
@@ -34,11 +29,12 @@ class Gameplay(State):
 
     def handle_mouse_event(self, event):
         mouse_pos = event.pos
-        for i in range(self.player_count):
-            card_index = self.get_card_at_pos(i, mouse_pos)
-            if card_index is not None:
-                selected_card = self.players_hands[i][card_index]  # Hole das Card-Objekt
-                self.deck.turn_card(selected_card)
+        selected_card = self.get_card_at_pos(self.current_player, mouse_pos)
+        if selected_card is not None:
+            card = self.players_hands[self.current_player][selected_card]
+            if not card.visible:
+                self.deck.turn_card(card)
+                self.end_turn()
 
     def get_card_at_pos(self, player_index, pos):
         card_width, card_height, card_gap = self.get_card_measurements()
@@ -78,9 +74,27 @@ class Gameplay(State):
 
         return None
 
+    def end_turn(self):
+        self.current_player = (self.current_player + 1) % self.player_count
 
-    def update(self, dt):
-        pass  # Gameplay-Logik hier
+    def get_card_measurements(self):
+        self.card_width = self.screen.get_width() / 22
+        self.card_height = self.card_width * 1.5
+        self.card_gap = self.card_width / 20
+        return self.card_width, self.card_height, self.card_gap
+
+    def draw(self, surface):
+        surface.fill(pygame.Color("blue"))
+
+        for i in range(self.player_count):
+            self.draw_player_hand(i, self.player_count)
+
+        self.draw_deck()
+        self.draw_stack()
+
+    def display_current_player(self, surface):
+        text = self.font.render(f"Player {self.current_player + 1}'s turn", True, pygame.Color("white"))
+        surface.blit(text, (10, 10))
 
     def draw_deck(self):
         card_width, card_height, card_gap = self.get_card_measurements()
@@ -89,7 +103,6 @@ class Gameplay(State):
 
         card_surface = pygame.transform.scale(GameAssets.CardBack, (int(card_width), int(card_height)))
         self.screen.blit(card_surface, (x, y))
-
 
     def draw_stack(self):
         card_width, card_height, card_gap = self.get_card_measurements()
@@ -140,13 +153,3 @@ class Gameplay(State):
                     card_surface = pygame.transform.rotate(card_surface, rotation_angle)
 
                 self.screen.blit(card_surface, (x, y))
-
-    def draw(self, surface):
-        surface.fill(pygame.Color("blue"))
-
-        for i in range(self.player_count):
-            self.draw_player_hand(i, self.player_count)
-
-        self.draw_deck()
-        self.draw_stack()
-
