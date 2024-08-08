@@ -93,8 +93,10 @@ class Deck:
             stack.add_card(top_card)
 
     def turn_card(self, card):
-        # ToDo
-        return None
+        if card is not None:
+            card.visible = True  # Karte aufdecken
+            print(f"Karte mit Wert {card.value} wurde aufgedeckt.")
+
 
     def deal(self, playercount):
         players_hands = [[] for _ in range(playercount)]

@@ -37,39 +37,45 @@ class Gameplay(State):
         for i in range(self.player_count):
             card_index = self.get_card_at_pos(i, mouse_pos)
             if card_index is not None:
-                self.selected_card = self.players_hands[i][card_index]
-                print(f"Selected card: {self.selected_card.value}")
+                selected_card = self.players_hands[i][card_index]  # Hole das Card-Objekt
+                self.deck.turn_card(selected_card)
 
     def get_card_at_pos(self, player_index, pos):
         card_width, card_height, card_gap = self.get_card_measurements()
         rows = 3
         cols = 4
 
-        if player_index == 0:
+        if player_index == 0:  # Spieler unten
             start_x = self.screen.get_width() / 2 - cols / 2 * (card_width + card_gap)
             start_y = self.screen.get_height() - rows * (card_height + card_gap)
-        elif player_index == 1:
+            rotation_angle = 0
+        elif player_index == 1:  # Spieler links
             start_x = card_gap
             start_y = self.screen.get_height() / 2 - (cols / 2) * (card_width + card_gap)
-        elif player_index == 2:
+            rotation_angle = 90
+        elif player_index == 2:  # Spieler oben
             start_x = self.screen.get_width() / 2 - (cols / 2) * (card_width + card_gap)
             start_y = card_gap
-        elif player_index == 3:
+            rotation_angle = 0
+        elif player_index == 3:  # Spieler rechts
             start_x = self.screen.get_width() - rows * (card_height + card_gap)
             start_y = self.screen.get_height() / 2 - (cols / 2) * (card_width + card_gap)
+            rotation_angle = 270
 
         for row in range(rows):
             for col in range(cols):
-                if player_index == 0 or player_index == 2:
+                if player_index == 0 or player_index == 2:  # Spieler unten oder oben
                     x = start_x + col * (card_width + card_gap)
                     y = start_y + row * (card_height + card_gap)
-                else:
+                    card_rect = pygame.Rect(x, y, card_width, card_height)
+                else:  # Spieler links oder rechts
                     x = start_x + row * (card_height + card_gap)
                     y = start_y + col * (card_width + card_gap)
+                    card_rect = pygame.Rect(x, y, card_height, card_width)  # Vertausche Breite und Höhe
 
-                card_rect = pygame.Rect(x, y, card_width, card_height)
                 if card_rect.collidepoint(pos):
                     return row * cols + col
+
         return None
 
 
@@ -103,20 +109,20 @@ class Gameplay(State):
 
         if player_index == 0:
             start_x = self.screen.get_width() / 2 - cols / 2 * (card_width + card_gap)
-            start_y = self.screen.get_height() - rows* (card_height + card_gap)
-            rotation_angle = 0  # Keine Rotation
+            start_y = self.screen.get_height() - rows * (card_height + card_gap)
+            rotation_angle = 0
         elif player_index == 1:
             start_x = card_gap
-            start_y = self.screen.get_height() / 2 - (cols / 2) * (card_width + card_gap)+ card_gap
-            rotation_angle = 90  # 90 Grad Rotation für die Karten am linken Bildschirmrand
+            start_y = self.screen.get_height() / 2 - (cols / 2) * (card_width + card_gap) + card_gap
+            rotation_angle = 90
         elif player_index == 2:
             start_x = self.screen.get_width() / 2 - (cols / 2) * (card_width + card_gap)
             start_y = card_gap
-            rotation_angle = 0  # Keine Rotation
+            rotation_angle = 0
         elif player_index == 3:
             start_x = self.screen.get_width() - rows * (card_height + card_gap)
             start_y = self.screen.get_height() / 2 - (cols / 2) * (card_width + card_gap)
-            rotation_angle = 270  # 270 Grad Rotation für die Karten am rechten Bildschirmrand
+            rotation_angle = 270
 
         for row in range(rows):
             for col in range(cols):
@@ -128,14 +134,12 @@ class Gameplay(State):
                     y = start_y + col * (card_width + card_gap)
 
                 card = self.players_hands[player_index][row * cols + col]
-                card_image = Card.get_image(card)
+                card_image = card.get_image()  # Holen des richtigen Bildes basierend auf dem visible-Wert
                 card_surface = pygame.transform.scale(card_image, (int(card_width), int(card_height)))
                 if rotation_angle != 0:
                     card_surface = pygame.transform.rotate(card_surface, rotation_angle)
 
                 self.screen.blit(card_surface, (x, y))
-
-
 
     def draw(self, surface):
         surface.fill(pygame.Color("blue"))

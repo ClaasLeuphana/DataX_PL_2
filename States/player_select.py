@@ -5,6 +5,7 @@ class PlayerSelect(State):
     def __init__(self):
         super(PlayerSelect, self).__init__()
         self.player_count = 1
+        self.max_players = 4  # Maximale Anzahl der Spieler
         self.next_state = "GAMEPLAY"
         self.font = pygame.font.Font(None, 50)
         self.screen_rect = pygame.display.get_surface().get_rect()
@@ -15,7 +16,8 @@ class PlayerSelect(State):
         elif event.type == pygame.MOUSEBUTTONUP:
             mouse_pos = pygame.mouse.get_pos()
             if self.increase_rect.collidepoint(mouse_pos):
-                self.player_count += 1
+                if self.player_count < self.max_players:  # Überprüfen, ob die maximale Anzahl erreicht wurde
+                    self.player_count += 1
             elif self.decrease_rect.collidepoint(mouse_pos):
                 self.player_count = max(1, self.player_count - 1)
             elif self.confirm_rect.collidepoint(mouse_pos):
