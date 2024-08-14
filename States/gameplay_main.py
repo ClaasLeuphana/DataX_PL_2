@@ -25,16 +25,19 @@ class Gameplay(State):
 
     def get_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
-            self.handle_mouse_event(event)
+            self.gameplaylogic(event)
 
-    def handle_mouse_event(self, event):
+    def gameplaylogic(self, event):
         mouse_pos = event.pos
         selected_card = self.get_card_at_pos(self.current_player, mouse_pos)
         if selected_card is not None:
             card = self.players_hands[self.current_player][selected_card]
             if not card.visible:
                 self.deck.turn_card(card)
-                self.end_turn()
+                if self.check_all_cards_visible(self.current_player):
+                    self.game_over()
+                else:
+                    self.end_turn()
 
     def get_card_at_pos(self, player_index, pos):
         card_width, card_height, card_gap = self.get_card_measurements()
@@ -77,6 +80,19 @@ class Gameplay(State):
     def end_turn(self):
         self.current_player = (self.current_player + 1) % self.player_count
 
+    def check_all_cards_visible(self, player_index):
+        """Überprüft, ob alle Karten des aktuellen Spielers aufgedeckt sind."""
+        for card in self.players_hands[player_index]:
+            if not card.visible:
+                return False
+        return True
+
+    def game_over(self):
+        """Wechselt den Spielzustand zu 'Game Over'."""
+        self.persist['winner'] = self.current_player + 1  # Der Gewinner ist der aktuelle Spieler
+        self.next_state = "GAMEOVER"
+        self.done = True
+
     def get_card_measurements(self):
         self.card_width = self.screen.get_width() / 22
         self.card_height = self.card_width * 1.5
@@ -87,7 +103,7 @@ class Gameplay(State):
         surface.fill(pygame.Color("blue"))
 
         for i in range(self.player_count):
-            self.draw_player_hand(i, self.player_count)
+            self.draw_player_hand(i)
 
         self.draw_deck()
         self.draw_stack()
@@ -114,7 +130,7 @@ class Gameplay(State):
         card_surface = pygame.transform.scale(card_image, (int(card_width), int(card_height)))
         self.screen.blit(card_surface, (x, y))
 
-    def draw_player_hand(self, player_index, total_players):
+    def draw_player_hand(self, player_index):
         card_width, card_height, card_gap = self.get_card_measurements()
 
         rows = 3

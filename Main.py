@@ -2,20 +2,22 @@ import pygame
 from States.menu import Menu
 from States.player_select import PlayerSelect
 from States.gameplay_main import Gameplay
+from States.game_over import GameOver
 from Game import Game
 
 class Main:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((1280, 720))
+        self.screen = pygame.display.set_mode((1280, 720)) # Bildschirmgröße ->720p
         self.clock = pygame.time.Clock()
         self.done = False
 
-        # States initialisieren
+        # Zustände initialisieren
         states = {
             "MENU": Menu(),
             "PLAYER_SELECT": PlayerSelect(),
-            "GAMEPLAY": Gameplay()
+            "GAMEPLAY": Gameplay(),
+            'GAMEOVER': GameOver()
         }
 
         # Spielinstanz erstellen

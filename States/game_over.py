@@ -1,0 +1,28 @@
+from .base import State
+import pygame
+
+class GameOver(State):
+    def __init__(self):
+        super(GameOver, self).__init__()
+        self.font = pygame.font.Font(None, 100)
+        self.screen = pygame.display.get_surface()
+        self.screen_rect = self.screen.get_rect()
+
+    def startup(self, persistent):
+        self.persist = persistent
+        self.winner = self.persist.get('winner', None)
+
+    def get_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            self.quit = True
+
+    def draw(self, surface):
+        surface.fill(pygame.Color("black"))
+        if self.winner is not None:
+            text = self.font.render(f"Player {self.winner} Wins!", True, pygame.Color("white"))
+            text_rect = text.get_rect(center=self.screen_rect.center)
+            surface.blit(text, text_rect)
+        else:
+            text = self.font.render("Game Over", True, pygame.Color("white"))
+            text_rect = text.get_rect(center=self.screen_rect.center)
+            surface.blit(text, text_rect)

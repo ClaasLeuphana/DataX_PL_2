@@ -94,8 +94,8 @@ class Deck:
 
     def turn_card(self, card):
         if card is not None:
-            card.visible = True  # Karte aufdecken
-            print(f"Karte mit Wert {card.value} wurde aufgedeckt.")
+            card.visible = True
+
 
 
     def deal(self, playercount):
