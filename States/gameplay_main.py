@@ -7,8 +7,11 @@ class Gameplay(State):
         super(Gameplay, self).__init__()
         self.player_count = 1
         self.current_player = 0
-        self.cards_turned = 0  # Zählt, wie viele Karten ein Spieler aufgedeckt hat
-        self.initial_round = True  # Kennzeichnet, ob es sich um die Anfangsrunde handelt
+        self.cards_turned = 0
+        self.initial_round = True
+        self.stack_clicked = False  # Trackt, ob der Stack angeklickt wurde
+        self.deck_clicked = False  # Trackt, ob das Deck angeklickt wurde
+        self.deck_action_taken = False  # Status der Deck-Aktion
         self.font = pygame.font.Font(None, 50)
         self.screen = pygame.display.get_surface()
         self.screen_rect = self.screen.get_rect()
@@ -41,6 +44,36 @@ class Gameplay(State):
             else:
                 self.gameLogic(event)
 
+    def gameLogic(self, event):
+        """Zentraler Ablauf der Spiellogik, ruft die einzelnen Schritte auf."""
+        mouse_pos = event.pos
+
+        if self.is_over_deck(mouse_pos):
+            self.handle_deck_click()
+        elif self.is_over_stack(mouse_pos):
+            self.handle_stack_click()
+        else:
+            if self.handleMouseEvent(event):  # Nur wenn eine Karte umgedreht wurde
+                if self.check_all_cards_visible(self.current_player):
+                    self.game_over()
+                else:
+                    self.end_turn()
+
+    def handleMouseEvent(self, event):
+        """Verarbeitet Mausereignisse und wählt Karten basierend auf der Position."""
+        mouse_pos = event.pos
+        selected_card = self.get_card_at_pos(self.current_player, mouse_pos)
+        if selected_card is not None:
+            card = self.players_hands[self.current_player][selected_card]
+            if not card.visible:
+                self.deck.turn_card(card)
+                return True  # Eine Karte wurde umgedreht
+            elif self.stack_clicked:  # Tausch mit dem Stack
+                self.swap_with_stack(selected_card)
+                self.stack_clicked = False
+                return True  # Eine Karte wurde getauscht
+        return False  # Keine Aktion durchgeführt
+
     def handle_initial_turn(self, event):
         """Lässt den aktuellen Spieler zwei seiner Karten aufdecken."""
         mouse_pos = event.pos
@@ -56,24 +89,52 @@ class Gameplay(State):
                     if self.current_player == 0:  # Nach der letzten Runde des letzten Spielers
                         self.initial_round = False  # Schaltet in die reguläre Spielrunde um
 
-    def gameLogic(self, event):
-        """Zentraler Ablauf der Spiellogik, ruft die einzelnen Schritte auf."""
-        if self.handleMouseEvent(event):  # Nur wenn eine Karte umgedreht wurde
-            if self.check_all_cards_visible(self.current_player):
-                self.game_over()
-            else:
-                self.end_turn()
+    def handle_deck_click(self):
+        """Legt die oberste Karte des Decks auf den Stack und erlaubt dann eine Aktion."""
+        if not self.deck_action_taken:
+                self.deck.draw(self.stack)
+                self.deck_action_taken = True  # Markiere die Deck-Aktion als durchgeführt
 
-    def handleMouseEvent(self, event):
-        """Verarbeitet Mausereignisse und wählt Karten basierend auf der Position."""
-        mouse_pos = event.pos
-        selected_card = self.get_card_at_pos(self.current_player, mouse_pos)
-        if selected_card is not None:
-            card = self.players_hands[self.current_player][selected_card]
-            if not card.visible:
-                self.deck.turn_card(card)
-                return True  # Eine Karte wurde umgedreht
-        return False  # Keine Karte wurde umgedreht
+    def handle_stack_click(self):
+        """Wählt die oberste Karte des Stacks aus oder tauscht Karten, wenn eine Handkarte ausgewählt wird."""
+        if not self.stack_clicked:
+            # Wenn der Stack-Klick das erste Mal erfolgt
+            self.stack_clicked = True
+            self.selected_stack_card = self.stack.peek()  # Wählt die oberste Karte des Stacks aus
+        else:
+            # Wenn der Stack-Klick bereits aktiv ist
+            mouse_pos = pygame.mouse.get_pos()
+            selected_card_index = self.get_card_at_pos(self.current_player, mouse_pos)
+            if selected_card_index is not None:
+                player_card = self.players_hands[self.current_player][selected_card_index]
+
+                # Tauscht die Handkarte mit der ausgewählten Stack-Karte
+                self.players_hands[self.current_player][selected_card_index] = self.selected_stack_card
+                self.stack.add_card(player_card)  # Legt die Handkarte auf den Stack
+
+                # Rücksetzen der ausgewählten Stack-Karte
+                self.selected_stack_card = None
+                self.stack_clicked = False  # Zurücksetzen des Klick-Status
+                self.deck_action_taken = True  # Markiert, dass eine Deck-Aktion stattgefunden hat
+            else:
+                # Kein Klick auf eine Handkarte, daher wird die Auswahl aufgehoben
+                self.selected_stack_card = None
+                self.stack_clicked = False
+
+    def swap_with_stack(self, selected_card_index):
+        """Tauscht die ausgewählte Karte des Spielers mit der obersten Karte des Stacks."""
+        player_card = self.players_hands[self.current_player][selected_card_index]
+        top_stack_card = self.stack.draw()  # Entfernt die oberste Karte vom Stack
+
+        # Setze die Sichtbarkeit der Stack-Karte auf True
+        if top_stack_card:
+            top_stack_card.visible = True
+
+        # Legt die Spielerkarte auf den Stack
+        self.stack.add_card(player_card)
+
+        # Ersetzt die Spielerkarte durch die Stack-Karte
+        self.players_hands[self.current_player][selected_card_index] = top_stack_card
 
     def get_card_at_pos(self, player_index, pos):
         card_width, card_height, card_gap = self.get_card_measurements()
@@ -109,9 +170,28 @@ class Gameplay(State):
 
         return None
 
+    def is_over_deck(self, pos):
+        """Überprüft, ob die Maus über dem Deck ist."""
+        card_width, card_height, card_gap = self.get_card_measurements()
+        x = self.screen.get_width() / 2 - (card_width + card_gap / 2)
+        y = self.screen.get_height() / 2 - card_height / 2
+        deck_rect = pygame.Rect(x, y, card_width, card_height)
+        return deck_rect.collidepoint(pos)
+
+    def is_over_stack(self, pos):
+        """Überprüft, ob die Maus über dem Stack ist."""
+        card_width, card_height, card_gap = self.get_card_measurements()
+        x = self.screen.get_width() / 2 + card_gap / 2
+        y = self.screen.get_height() / 2 - card_height / 2
+        stack_rect = pygame.Rect(x, y, card_width, card_height)
+        return stack_rect.collidepoint(pos)
+
     def end_turn(self):
         """Wechselt zum nächsten Spieler."""
         self.current_player = (self.current_player + 1) % self.player_count
+        self.stack_clicked = False
+        self.deck_clicked = False
+        self.deck_action_taken = False  # Zurücksetzen des Status für den nächsten Zug
 
     def check_all_cards_visible(self, player_index):
         """Überprüft, ob alle Karten des aktuellen Spielers aufgedeckt sind."""
@@ -134,7 +214,7 @@ class Gameplay(State):
         return self.card_width, self.card_height, self.card_gap
 
     def draw(self, surface):
-        """Zeichnet die Spielkomponenten auf den Bildschirm."""
+        """Zeichnet das Spielfeld, den Stapel, das Deck und die Karten der Spieler."""
         surface.fill(pygame.Color("blue"))
 
         for i in range(self.player_count):
@@ -169,7 +249,7 @@ class Gameplay(State):
         self.screen.blit(card_surface, (x, y))
 
     def draw_player_hand(self, player_index):
-        """Zeichnet die Hand des Spielers auf den Bildschirm."""
+        """Zeichnet die Kartenhand des Spielers auf den Bildschirm."""
         card_width, card_height, card_gap = self.get_card_measurements()
 
         rows = 3

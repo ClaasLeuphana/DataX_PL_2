@@ -26,15 +26,11 @@ class GameAssets:
     Card0 = load_image("Playingcard 0.png")
     CardN1 = load_image("Playingcard -1.png")
     CardN2 = load_image("Playingcard -2.png")
-        # draw animation
-        # flip animation
-        # deal animation
-        # hover animation
 
 class Card:
     def __init__(self, value, visible=False):
-            self.value = value
-            self.visible = visible
+        self.value = value
+        self.visible = visible
 
     def get_image(self):
         if not self.visible:
@@ -59,6 +55,7 @@ class Card:
         return value_to_image.get(self.value, GameAssets.CardBack)
 
 
+# Alle Spielkarten
 class Deck:
     def __init__(self):
         self.cards = self.generate_deck()
@@ -83,8 +80,7 @@ class Deck:
     def draw_card(self):
         if self.cards:
             return self.cards.pop()
-        else:
-            return None
+        return None
 
     def turn_top_card(self, stack):
         if self.cards:
@@ -96,8 +92,6 @@ class Deck:
         if card is not None:
             card.visible = True
 
-
-
     def deal(self, playercount):
         players_hands = [[] for _ in range(playercount)]
         for _ in range(12):
@@ -105,41 +99,62 @@ class Deck:
                 player_hand.append(self.draw_card())
         return players_hands
 
-    def add_card(self, card):
-        self.cards.append(card)
+    def draw(self, stack):
+        """Bewegt die oberste Karte des Decks auf den Stack und dreht sie um."""
+        if self.cards:
+            top_card = self.cards.pop()  # Ziehe die oberste Karte vom Deck
+            top_card.visible = True  # Drehe die Karte um
+            stack.add_card(top_card)  # Füge die Karte zum Stack hinzu
 
     def __len__(self):
         return len(self.cards)
 
 
+# Mittelstapel von dem die Spieler Karten ziehen können
 class Stack:
     def __init__(self):
         self.cards = []
 
     def add_card(self, card):
+        """Fügt eine Karte zum Stapel hinzu."""
         self.cards.append(card)
 
-
     def get_top_card(self):
+        """Gibt die oberste Karte des Stapels zurück (falls vorhanden)."""
         if self.cards:
             return self.cards[-1]
         return None
 
     def get_second_top_card(self):
+        """Gibt die zweitoberste Karte des Stapels zurück (falls vorhanden)."""
         if len(self.cards) > 1:
             return self.cards[-2]
-        # ToDo
+        return None
 
     def clear(self):
+        """Entfernt alle Karten vom Stapel."""
         self.cards.clear()
-        # ToDo
 
-    def take_top_card(self):
+    def draw(self):
+        """Entfernt und gibt die oberste Karte des Stapels zurück. Sichtbarkeit wird umgeschaltet."""
         if self.cards:
-            self.cards[-1].visible = not self.cards[-1].visible
-            # ToDo
+            top_card = self.cards.pop()
+            top_card.visible = not top_card.visible
+            return top_card
+        return None
 
     def turn_second_top_card(self):
+        """Schaltet die Sichtbarkeit der zweitobersten Karte um (falls vorhanden)."""
         if len(self.cards) > 1:
             self.cards[-2].visible = not self.cards[-2].visible
-            # ToDo
+
+    def peek(self):
+        """Gibt die oberste Karte des Stacks zurück, ohne sie zu entfernen oder ihre Sichtbarkeit zu ändern."""
+        if self.cards:
+            return self.cards[-1]
+        return None
+
+    def is_empty(self):
+        """Überprüft, ob der Stapel leer ist."""
+        return len(self.cards) == 0
+
