@@ -5,23 +5,29 @@ class Menu(State):
     def __init__(self):
         super(Menu, self).__init__()
         self.active_index = 0
-        self.options = ["Start Game", "Quit Game"]
-        self.next_state = "PLAYER_SELECT"
+        self.options = ["Start Game", "Rules", "Quit Game"]  # Neuer Button für "Rules"
+        self.next_state = "PLAYER_SELECT"  # Dies wird durch handle_action angepasst
         self.font = pygame.font.Font(None, 50)
         self.screen_rect = pygame.display.get_surface().get_rect()
+        self.update_text_positions()  # Initial Positionen setzen
 
     def render_text(self, index):
         color = pygame.Color("red") if index == self.active_index else pygame.Color("white")
         return self.font.render(self.options[index], True, color)
 
     def get_text_position(self, text, index):
-        center = (self.screen_rect.center[0], self.screen_rect.center[1] + (index * 50))
+        # Berechnet die Position der Textelemente basierend auf der aktuellen Bildschirmgröße
+        center = (self.screen_rect.center[0], self.screen_rect.center[1] + (index - len(self.options) / 2) * 50)
         return text.get_rect(center=center)
 
     def handle_action(self):
-        if self.active_index == 0:
+        if self.active_index == 0:  # Start Game
+            self.next_state = "PLAYER_SELECT"
             self.done = True
-        elif self.active_index == 1:
+        elif self.active_index == 1:  # Rules
+            self.next_state = "RULES"
+            self.done = True
+        elif self.active_index == 2:  # Quit Game
             self.quit = True
 
     def get_event(self, event):
@@ -38,7 +44,7 @@ class Menu(State):
                     break
 
     def draw(self, surface):
-        surface.fill(pygame.Color("black"))
+        surface.fill(pygame.Color("blue"))
         for index, option in enumerate(self.options):
             text_render = self.render_text(index)
             surface.blit(text_render, self.get_text_position(text_render, index))
@@ -53,8 +59,16 @@ class Menu(State):
 
     def resize(self, width, height):
         """Passt das Menü an eine neue Bildschirmgröße an."""
-        # Aktualisieren Sie die Positionen und Größen der Menüelemente entsprechend der neuen Bildschirmgröße
-        pass
+        self.screen_rect = pygame.Rect(0, 0, width, height)  # Update the screen_rect with the new dimensions
+        self.update_text_positions()  # Update text positions based on new screen size
+
+    def update_text_positions(self):
+        """Aktualisiert die Textpositionen für die Menüoptionen basierend auf der aktuellen Bildschirmgröße."""
+        self.text_positions = []
+        for index in range(len(self.options)):
+            text_render = self.render_text(index)
+            text_rect = self.get_text_position(text_render, index)
+            self.text_positions.append(text_rect)
 
     def cleanup(self):
         # Bereinigen vor dem Zustandswechsel

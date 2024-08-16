@@ -3,6 +3,7 @@ from States.menu import Menu
 from States.player_select import PlayerSelect
 from States.gameplay_main import Gameplay
 from States.game_over import GameOver
+from States.Rules import Rules
 from Game import Game
 
 class Main:
@@ -25,6 +26,7 @@ class Main:
         states = {
             "MENU": Menu(),
             "PLAYER_SELECT": PlayerSelect(),
+            "RULES": Rules(),
             "GAMEPLAY": Gameplay(),
             'GAMEOVER': GameOver()
         }

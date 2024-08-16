@@ -42,7 +42,7 @@ class PlayerSelect(State):
                 self.done = True
 
     def draw(self, surface):
-        surface.fill(pygame.Color("black"))
+        surface.fill(pygame.Color("blue"))
         text = self.font.render(f"Player Count: {self.player_count}", True, pygame.Color("white"))
         self.text_rect = text.get_rect(center=self.screen_rect.center)
         surface.blit(text, self.text_rect)
@@ -55,7 +55,7 @@ class PlayerSelect(State):
         self.decrease_rect = decrease_text.get_rect(center=(self.screen_rect.centerx - 200, self.screen_rect.centery))
         surface.blit(decrease_text, self.decrease_rect)
 
-        confirm_text = self.font.render("Confirm", True, pygame.Color("blue"))
+        confirm_text = self.font.render("Confirm", True, pygame.Color("yellow"))
         self.confirm_rect = confirm_text.get_rect(center=(self.screen_rect.centerx, self.screen_rect.centery + 100))
         surface.blit(confirm_text, self.confirm_rect)
 
