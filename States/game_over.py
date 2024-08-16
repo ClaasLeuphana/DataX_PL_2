@@ -1,5 +1,6 @@
-from .base import State
 import pygame
+from .base import State
+
 
 class GameOver(State):
     def __init__(self):
@@ -7,6 +8,7 @@ class GameOver(State):
         self.font = pygame.font.Font(None, 100)
         self.screen = pygame.display.get_surface()
         self.screen_rect = self.screen.get_rect()
+        self.screen_rect = pygame.display.get_surface().get_rect()
 
     def startup(self, persistent):
         self.persist = persistent
@@ -17,12 +19,18 @@ class GameOver(State):
             self.quit = True
 
     def draw(self, surface):
+        # Clear screen
         surface.fill(pygame.Color("black"))
+
+
+        # Draw text
         if self.winner is not None:
             text = self.font.render(f"Player {self.winner} Wins!", True, pygame.Color("white"))
-            text_rect = text.get_rect(center=self.screen_rect.center)
-            surface.blit(text, text_rect)
         else:
             text = self.font.render("Game Over", True, pygame.Color("white"))
-            text_rect = text.get_rect(center=self.screen_rect.center)
-            surface.blit(text, text_rect)
+
+        text_rect = text.get_rect(center=self.screen_rect.center)
+        surface.blit(text, text_rect)
+
+    def resize(self, width, height):
+        pass

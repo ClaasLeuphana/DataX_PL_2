@@ -8,7 +8,16 @@ from Game import Game
 class Main:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((1280, 720)) # Bildschirmgröße ->720p
+
+        # Verwende Bildschirminformationen, um die Größe des Fensters zu bestimmen
+        self.screen_info = pygame.display.Info()
+        self.screen = pygame.display.set_mode(
+            (self.screen_info.current_w, self.screen_info.current_h - 50),
+            pygame.RESIZABLE
+        )
+
+        pygame.display.set_caption("Mein Spiel")  # Optional: Setze den Fenstertitel
+
         self.clock = pygame.time.Clock()
         self.done = False
 
@@ -29,7 +38,11 @@ class Main:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.done = True
+                elif event.type == pygame.VIDEORESIZE:
+                    self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
+                    self.game.resize(event.w, event.h)  # Größe anpassen
                 self.game.get_event(event)
+
             self.game.update(dt)
             self.screen.fill((0, 0, 0))
             self.game.draw(self.screen)

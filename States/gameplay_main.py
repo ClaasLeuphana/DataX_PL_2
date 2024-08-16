@@ -15,6 +15,23 @@ class Gameplay(State):
         self.font = pygame.font.Font(None, 50)
         self.screen = pygame.display.get_surface()
         self.screen_rect = self.screen.get_rect()
+        self.card_width, self.card_height, self.card_gap = self.get_card_measurements()
+        self.selected_stack_card = None
+
+    def resize(self, width, height):
+        """Passt die Spielanzeige an die neue Fenstergröße an."""
+        self.screen_rect = pygame.Rect(0, 0, width, height)
+        self.screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+
+        # Aktualisiere die Kartenmaße und andere Bildschirmelemente
+        self.card_width, self.card_height, self.card_gap = self.get_card_measurements()
+
+    def get_card_measurements(self):
+        """Berechnet die Maße und Abstände der Karten basierend auf der Bildschirmgröße."""
+        self.card_width = self.screen.get_width() / 22
+        self.card_height = self.card_width * 1.5
+        self.card_gap = self.card_width / 20
+        return self.card_width, self.card_height, self.card_gap
 
     def startup(self, persistent):
         self.persist = persistent
@@ -224,12 +241,6 @@ class Gameplay(State):
         self.next_state = "GAMEOVER"
         self.done = True
 
-    def get_card_measurements(self):
-        """Berechnet die Maße und Abstände der Karten."""
-        self.card_width = self.screen.get_width() / 22
-        self.card_height = self.card_width * 1.5
-        self.card_gap = self.card_width / 20
-        return self.card_width, self.card_height, self.card_gap
 
     def draw(self, surface):
         """Zeichnet das Spielfeld, den Stapel, das Deck und die Karten der Spieler."""

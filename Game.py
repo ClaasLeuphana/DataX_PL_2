@@ -1,3 +1,4 @@
+import pygame
 class Game:
     def __init__(self, screen, states, start_state):
         self.screen = screen
@@ -24,3 +25,8 @@ class Game:
         persistent = self.state.cleanup()
         self.state = self.states[self.state_name]
         self.state.startup(persistent)
+
+    def resize(self, width, height):
+        """Passt das Spiel und die aktuelle State an eine neue Bildschirmgröße an."""
+        self.screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+        self.state.resize(width, height)  # Ruf die resize Methode der aktuellen State auf

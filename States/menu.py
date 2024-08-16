@@ -50,3 +50,12 @@ class Menu(State):
             text_rect = self.get_text_position(text_render, index)
             if text_rect.collidepoint(mouse_pos):
                 self.active_index = index
+
+    def resize(self, width, height):
+        """Passt das Menü an eine neue Bildschirmgröße an."""
+        # Aktualisieren Sie die Positionen und Größen der Menüelemente entsprechend der neuen Bildschirmgröße
+        pass
+
+    def cleanup(self):
+        # Bereinigen vor dem Zustandswechsel
+        return {}
