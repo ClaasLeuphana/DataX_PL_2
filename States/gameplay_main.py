@@ -61,6 +61,26 @@ class Gameplay(State):
 
     def handleMouseEvent(self, event):
         """Verarbeitet Mausereignisse und wählt Karten basierend auf der Position."""
+        # Überprüfe, ob eine Stack-Karte ausgewählt ist
+        if self.selected_stack_card:
+            mouse_pos = event.pos
+            selected_card_index = self.get_card_at_pos(self.current_player, mouse_pos)
+
+            if selected_card_index is not None:
+                # Tausche die ausgewählte Karte des Spielers mit der Stack-Karte
+                self.swap_with_stack(selected_card_index)
+
+                # Setze die Auswahl der Stack-Karte und den Klick-Status zurück
+                self.selected_stack_card = None
+                self.stack_clicked = False
+                return True  # Beendet die Methode, um zu verhindern, dass weitere Aktionen ausgeführt werden
+            else:
+                # Wenn nicht auf eine Handkarte geklickt wird, hebe die Auswahl auf
+                self.selected_stack_card = None
+                self.stack_clicked = False
+                return False  # Keine Aktion durchgeführt
+
+        # Wenn keine Stack-Karte ausgewählt ist, führe die normale Mausereignis-Logik aus
         mouse_pos = event.pos
         selected_card = self.get_card_at_pos(self.current_player, mouse_pos)
         if selected_card is not None:
@@ -68,10 +88,6 @@ class Gameplay(State):
             if not card.visible:
                 self.deck.turn_card(card)
                 return True  # Eine Karte wurde umgedreht
-            elif self.stack_clicked:  # Tausch mit dem Stack
-                self.swap_with_stack(selected_card)
-                self.stack_clicked = False
-                return True  # Eine Karte wurde getauscht
         return False  # Keine Aktion durchgeführt
 
     def handle_initial_turn(self, event):
@@ -131,7 +147,9 @@ class Gameplay(State):
             top_stack_card.visible = True
 
         # Legt die Spielerkarte auf den Stack
-        self.stack.add_card(player_card)
+        if player_card:
+            player_card.visible = True
+            self.stack.add_card(player_card)
 
         # Ersetzt die Spielerkarte durch die Stack-Karte
         self.players_hands[self.current_player][selected_card_index] = top_stack_card
