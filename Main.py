@@ -6,6 +6,7 @@ from States.game_over import GameOver
 from States.Rules import Rules
 from Game import Game
 
+
 class Main:
     def __init__(self):
         pygame.init()
@@ -51,6 +52,7 @@ class Main:
             pygame.display.flip()
 
         pygame.quit()
+
 
 if __name__ == "__main__":
     main = Main()
