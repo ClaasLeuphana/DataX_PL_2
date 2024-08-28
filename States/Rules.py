@@ -2,8 +2,9 @@ import pygame
 from .base import State
 
 class Rules(State):
-    def __init__(self):
+    def __init__(self, assets=None):
         super(Rules, self).__init__()
+        self.assets = assets
         self.font = pygame.font.Font(None, 30)
         self.button_font = pygame.font.Font(None, 40)  # Schriftart für den Button
         self.screen_rect = pygame.display.get_surface().get_rect()
@@ -61,7 +62,7 @@ class Rules(State):
     def draw(self, surface):
         surface.fill(pygame.Color("blue"))
 
-        # Zeichne den gescrollten Text auf dem Bildschirm
+
         y_offset = self.scroll_offset
         for line in self.rendered_text:
             surface.blit(line, (self.screen_rect.centerx - line.get_width() / 2, y_offset))

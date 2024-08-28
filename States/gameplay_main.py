@@ -2,9 +2,16 @@ from .base import State
 from GameAssets import *
 
 
+def remove_three_in_a_row(cards):
+    """Setzt elim der Karten auf True."""
+    for card in cards:
+        card.elim = True
+
+
 class Gameplay(State):
-    def __init__(self):
+    def __init__(self, assets=None):
         super(Gameplay, self).__init__()
+        self.assets = assets
         self.player_count = 1
         self.current_player = 0
         self.cards_turned = 0
@@ -28,21 +35,22 @@ class Gameplay(State):
 
     def get_card_measurements(self):
         """Berechnet die Maße und Abstände der Karten basierend auf der Bildschirmgröße."""
-        self.card_width = self.screen.get_width() / 22
+        self.card_width = self.screen.get_width() / 25
         self.card_height = self.card_width * 1.5
-        self.card_gap = self.card_width / 20
+        self.card_gap = self.card_width / 12
         return self.card_width, self.card_height, self.card_gap
 
     def startup(self, persistent):
         self.persist = persistent
         self.player_count = self.persist.get('player_count', 1)
         self.current_player = 0
+        self.assets = self.persist.get('assets', GameAssets())
         self.GameStart()
 
     def GameStart(self):
         """Bereitet alles für den Spielstart vor."""
         # Deck und Stapel vorbereiten
-        self.deck = Deck()
+        self.deck = Deck(assets=self.assets)
         self.stack = Stack()
         self.players_hands = self.deck.deal(self.player_count)
         self.deck.turn_top_card(self.stack)
@@ -62,7 +70,7 @@ class Gameplay(State):
                 self.gameLogic(event)
 
     def gameLogic(self, event):
-        """Zentraler Ablauf der Spiellogik, ruft die einzelnen Schritte auf."""
+        """Zentraler Ablauf der Spiellogik ruft die einzelnen Schritte auf."""
         mouse_pos = event.pos
 
         if self.is_over_deck(mouse_pos):
@@ -70,42 +78,42 @@ class Gameplay(State):
         elif self.is_over_stack(mouse_pos):
             self.handle_stack_click()
         else:
-            if self.handleMouseEvent(event):  # Nur wenn eine Karte umgedreht wurde
-                if self.check_all_cards_visible(self.current_player):
-                    self.game_over()
+            # Verarbeitet Mausereignisse und wählt Karten basierend auf der Position.
+            if self.selected_stack_card:
+                selected_card_index = self.get_card_at_pos(self.current_player, mouse_pos)
+
+                if selected_card_index is not None:
+                    self.swap_with_stack(selected_card_index)
+
+                    # Rücksetzen der ausgewählten Stack-Karte
+                    self.selected_stack_card = None
+                    self.stack_clicked = False
+
+                    # Überprüfen, ob das Spiel vorbei ist oder der Zug endet
+                    if self.check_all_cards_visible(self.current_player):
+                        self.game_over()
+                    else:
+                        self.end_turn()
+
                 else:
-                    self.end_turn()
+                    self.selected_stack_card = None
+                    self.stack_clicked = False
 
-    def handleMouseEvent(self, event):
-        """Verarbeitet Mausereignisse und wählt Karten basierend auf der Position."""
-        # Überprüfe, ob eine Stack-Karte ausgewählt ist
-        if self.selected_stack_card:
-            mouse_pos = event.pos
-            selected_card_index = self.get_card_at_pos(self.current_player, mouse_pos)
-
-            if selected_card_index is not None:
-                # Tausche die ausgewählte Karte des Spielers mit der Stack-Karte
-                self.swap_with_stack(selected_card_index)
-
-                # Setze die Auswahl der Stack-Karte und den Klick-Status zurück
-                self.selected_stack_card = None
-                self.stack_clicked = False
-                return True  # Beendet die Methode, um zu verhindern, dass weitere Aktionen ausgeführt werden
             else:
-                # Wenn nicht auf eine Handkarte geklickt wird, hebe die Auswahl auf
-                self.selected_stack_card = None
-                self.stack_clicked = False
-                return False  # Keine Aktion durchgeführt
+                selected_card_index = self.get_card_at_pos(self.current_player, mouse_pos)
+                if selected_card_index is not None:
+                    card = self.players_hands[self.current_player][selected_card_index]
+                    if not card.visible:
+                        self.deck.turn_card(card)
+                        self.check_three_in_a_row(self.current_player)
+                    elif card.visible:
+                        self.highlight_card(card)
 
-        # Wenn keine Stack-Karte ausgewählt ist, führe die normale Mausereignis-Logik aus
-        mouse_pos = event.pos
-        selected_card = self.get_card_at_pos(self.current_player, mouse_pos)
-        if selected_card is not None:
-            card = self.players_hands[self.current_player][selected_card]
-            if not card.visible:
-                self.deck.turn_card(card)
-                return True  # Eine Karte wurde umgedreht
-        return False  # Keine Aktion durchgeführt
+                    # Überprüfen, ob das Spiel vorbei ist oder der Zug endet
+                    if self.check_all_cards_visible(self.current_player):
+                        self.game_over()
+                    else:
+                        self.end_turn()
 
     def handle_initial_turn(self, event):
         """Lässt den aktuellen Spieler zwei seiner Karten aufdecken."""
@@ -125,8 +133,8 @@ class Gameplay(State):
     def handle_deck_click(self):
         """Legt die oberste Karte des Decks auf den Stack und erlaubt dann eine Aktion."""
         if not self.deck_action_taken:
-                self.deck.draw(self.stack)
-                self.deck_action_taken = True  # Markiere die Deck-Aktion als durchgeführt
+            self.deck.draw(self.stack)
+            self.deck_action_taken = True  # Markiere die Deck-Aktion als durchgeführt
 
     def handle_stack_click(self):
         """Wählt die oberste Karte des Stacks aus oder tauscht Karten, wenn eine Handkarte ausgewählt wird."""
@@ -171,7 +179,11 @@ class Gameplay(State):
         # Ersetzt die Spielerkarte durch die Stack-Karte
         self.players_hands[self.current_player][selected_card_index] = top_stack_card
 
+        # Überprüfe, ob der aktuelle Spieler drei gleiche Karten in einer Reihe hat
+        self.check_three_in_a_row(self.current_player)
+
     def get_card_at_pos(self, player_index, pos):
+        global start_x, start_y
         card_width, card_height, card_gap = self.get_card_measurements()
         rows = 3
         cols = 4
@@ -241,7 +253,6 @@ class Gameplay(State):
         self.next_state = "GAMEOVER"
         self.done = True
 
-
     def draw(self, surface):
         """Zeichnet das Spielfeld, den Stapel, das Deck und die Karten der Spieler."""
         surface.fill(pygame.Color("blue"))
@@ -252,6 +263,7 @@ class Gameplay(State):
         self.draw_deck()
         self.draw_stack()
         self.draw_player_score()
+
     def display_current_player(self, surface):
         """Zeigt den aktuellen Spieler an."""
         text = self.font.render(f"Player {self.current_player + 1}'s turn", True, pygame.Color("white"))
@@ -263,7 +275,7 @@ class Gameplay(State):
         x = self.screen.get_width() / 2 - (card_width + card_gap / 2)
         y = self.screen.get_height() / 2 - card_height / 2
 
-        card_surface = pygame.transform.scale(GameAssets.CardBack, (int(card_width), int(card_height)))
+        card_surface = pygame.transform.scale(self.assets.CardBack, (int(card_width), int(card_height)))
         self.screen.blit(card_surface, (x, y))
 
     def draw_stack(self):
@@ -272,15 +284,16 @@ class Gameplay(State):
         x = self.screen.get_width() / 2 + card_gap / 2
         y = self.screen.get_height() / 2 - card_height / 2
 
-        card = self.stack.cards[-1]
-        card_image = Card.get_image(card)
-        card_surface = pygame.transform.scale(card_image, (int(card_width), int(card_height)))
-        self.screen.blit(card_surface, (x, y))
+        if self.stack.cards:
+            card = self.stack.cards[-1]
+            card_image = card.get_image()
+            card_surface = pygame.transform.scale(card_image, (int(card_width), int(card_height)))
+            self.screen.blit(card_surface, (x, y))
 
     def draw_player_hand(self, player_index):
         """Zeichnet die Kartenhand des Spielers auf den Bildschirm."""
+        global start_x, start_y, rotation_angle
         card_width, card_height, card_gap = self.get_card_measurements()
-
         rows = 3
         cols = 4
 
@@ -303,6 +316,12 @@ class Gameplay(State):
 
         for row in range(rows):
             for col in range(cols):
+                index = row * cols + col
+                card = self.players_hands[player_index][index]
+
+                if card.elim:
+                    continue  # Überspringt die eliminierte Karte
+
                 if player_index == 0 or player_index == 2:
                     x = start_x + col * (card_width + card_gap)
                     y = start_y + row * (card_height + card_gap)
@@ -310,18 +329,55 @@ class Gameplay(State):
                     x = start_x + row * (card_height + card_gap)
                     y = start_y + col * (card_width + card_gap)
 
-                card = self.players_hands[player_index][row * cols + col]
-                card_image = card.get_image()  # Holen des richtigen Bildes basierend auf dem visible-Wert
-                card_surface = pygame.transform.scale(card_image, (int(card_width), int(card_height)))
+                card_image = card.get_image()
+
+                # Anpassung der Skalierung, wenn die Karte markiert ist
+                scale = 1.1 if card.highlighted else 1.0
+                card_width_scaled = int(card_width * scale)
+                card_height_scaled = int(card_height * scale)
+
+                card_surface = pygame.transform.scale(card_image, (card_width_scaled, card_height_scaled))
                 if rotation_angle != 0:
                     card_surface = pygame.transform.rotate(card_surface, rotation_angle)
 
                 self.screen.blit(card_surface, (x, y))
+
+    def check_three_in_a_row(self, player_index):
+        """Überprüft, ob drei gleiche Karten in einer vertikalen Reihe des angegebenen Spielers vorhanden sind und
+        alle hervorgehoben sind."""
+        hand = self.players_hands[player_index]
+        rows = 3
+        cols = 4
+
+        # Überprüfe alle möglichen 3er-Reihen vertikal
+        for col in range(cols):
+            for row in range(rows - 2):  # Es gibt nur rows - 2 Möglichkeiten, eine 3er Reihe zu beginnen
+                index1 = row * cols + col
+                index2 = (row + 1) * cols + col
+                index3 = (row + 2) * cols + col
+
+                if (0 <= index1 < len(hand) and
+                        0 <= index2 < len(hand) and
+                        0 <= index3 < len(hand)):
+
+
+                    card1 = hand[index1]
+                    card2 = hand[index2]
+                    card3 = hand[index3]
+
+                    if card1.value == card2.value == card3.value and card1.value > 0 and card1.visible and card2.visible and card3.visible:
+                        remove_three_in_a_row([card1, card2, card3])
+
+    def highlight_card(self, card):
+        """Hebt die Karte des Spielers hervor oder hebt die Hervorhebung auf."""
+        card.highlighted = not card.highlighted
+        self.check_three_in_a_row(self.current_player)  # Überprüft nach dem Hervorheben sofort die Reihen
+
     def Calculate_player_score(self, player_index):
         """Berechnet die Punktzahl eines Spielers basierend auf den offenen Karten."""
         player_score = 0
         for card in self.players_hands[player_index]:
-            if card.visible:
+            if card.visible and not card.elim:
                 player_score += card.value
         return player_score
 

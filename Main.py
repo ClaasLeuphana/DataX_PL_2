@@ -4,12 +4,16 @@ from States.player_select import PlayerSelect
 from States.gameplay_main import Gameplay
 from States.game_over import GameOver
 from States.Rules import Rules
+from States.options import Options
 from Game import Game
-
+from GameAssets import GameAssets
 
 class Main:
     def __init__(self):
         pygame.init()
+
+        # Initialisiere die GameAssets
+        self.assets = GameAssets()  # Erstellen einer Instanz von GameAssets
 
         # Verwende Bildschirminformationen, um die Größe des Fensters zu bestimmen
         self.screen_info = pygame.display.Info()
@@ -25,11 +29,12 @@ class Main:
 
         # Zustände initialisieren
         states = {
-            "MENU": Menu(),
-            "PLAYER_SELECT": PlayerSelect(),
-            "RULES": Rules(),
-            "GAMEPLAY": Gameplay(),
-            'GAMEOVER': GameOver()
+            "MENU": Menu(assets=self.assets),
+            "PLAYER_SELECT": PlayerSelect(assets=self.assets),
+            "RULES": Rules(assets=self.assets),
+            "OPTIONS": Options(assets=self.assets),
+            "GAMEPLAY": Gameplay(assets=self.assets),
+            'GAMEOVER': GameOver(assets=self.assets)
         }
 
         # Spielinstanz erstellen
@@ -46,13 +51,16 @@ class Main:
                     self.game.resize(event.w, event.h)  # Größe anpassen
                 self.game.get_event(event)
 
+            # Check if the current state or the game itself requests to quit
+            if self.game.done or self.game.quit:
+                self.done = True
+
             self.game.update(dt)
             self.screen.fill((0, 0, 0))
             self.game.draw(self.screen)
             pygame.display.flip()
 
         pygame.quit()
-
 
 if __name__ == "__main__":
     main = Main()

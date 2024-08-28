@@ -3,8 +3,9 @@ from .base import State
 
 
 class GameOver(State):
-    def __init__(self):
+    def __init__(self, assets=None):
         super(GameOver, self).__init__()
+        self.assets = assets
         self.font = pygame.font.Font(None, 100)
         self.screen = pygame.display.get_surface()
         self.screen_rect = self.screen.get_rect()
