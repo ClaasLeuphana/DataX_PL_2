@@ -251,7 +251,7 @@ class Gameplay(State):
 
         self.draw_deck()
         self.draw_stack()
-
+        self.draw_player_score()
     def display_current_player(self, surface):
         """Zeigt den aktuellen Spieler an."""
         text = self.font.render(f"Player {self.current_player + 1}'s turn", True, pygame.Color("white"))
@@ -317,3 +317,38 @@ class Gameplay(State):
                     card_surface = pygame.transform.rotate(card_surface, rotation_angle)
 
                 self.screen.blit(card_surface, (x, y))
+    def Calculate_player_score(self, player_index):
+        """Berechnet die Punktzahl eines Spielers basierend auf den offenen Karten."""
+        player_score = 0
+        for card in self.players_hands[player_index]:
+            if card.visible:
+                player_score += card.value
+        return player_score
+
+    def draw_player_score(self):
+        """Zeigt dauerhaft die Punktzahl aller Spieler rechts neben der Spielerhand an."""
+        for i in range(self.player_count):
+            player_score = self.Calculate_player_score(i)
+
+            # Render the text for the score
+            text = self.font.render(f"Score: {player_score}", True, pygame.Color("white"))
+
+            # Berechne die Position des Textes nahe der Spielerhand
+            if i == 0:  # Spieler unten
+                x = self.screen.get_width() / 2 + 2 * (self.card_width + self.card_gap)
+                y = self.screen.get_height() - 3 * (self.card_height + self.card_gap)
+                rotated_text = text  # Keine Rotation erforderlich
+            elif i == 1:  # Spieler links
+                x = self.card_height * 3 - 5 * self.card_gap
+                y = self.screen.get_height() / 2 + 2 * (self.card_width + self.card_gap) + self.card_gap
+                rotated_text = pygame.transform.rotate(text, 270)  # Schrift um 90 Grad drehen
+            elif i == 2:  # Spieler oben
+                x = self.screen.get_width() / 2 + 2 * (self.card_width + self.card_gap)
+                y = 3 * self.card_height - 5 * self.card_gap
+                rotated_text = pygame.transform.rotate(text, 180)  # Schrift um 180 Grad drehen
+            elif i == 3:  # Spieler rechts
+                x = self.screen.get_width() - 3 * (self.card_height + self.card_gap)
+                y = self.screen.get_height() / 2 - 4 * (self.card_width + self.card_gap) + self.card_gap
+                rotated_text = pygame.transform.rotate(text, 90)  # Schrift um 270 Grad drehen (oder -90 Grad)
+
+            self.screen.blit(rotated_text, (x, y))
