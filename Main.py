@@ -3,10 +3,12 @@ from States.menu import Menu
 from States.player_select import PlayerSelect
 from States.gameplay_main import Gameplay
 from States.game_over import GameOver
+from States.Scoreboard import Scoreboard
 from States.Rules import Rules
 from States.options import Options
 from Game import Game
 from GameAssets import GameAssets
+
 
 class Main:
     def __init__(self):
@@ -33,6 +35,7 @@ class Main:
             "PLAYER_SELECT": PlayerSelect(assets=self.assets),
             "RULES": Rules(assets=self.assets),
             "OPTIONS": Options(assets=self.assets),
+            "SCOREBOARD": Scoreboard(assets=self.assets),
             "GAMEPLAY": Gameplay(assets=self.assets),
             'GAMEOVER': GameOver(assets=self.assets)
         }
@@ -61,6 +64,7 @@ class Main:
             pygame.display.flip()
 
         pygame.quit()
+
 
 if __name__ == "__main__":
     main = Main()

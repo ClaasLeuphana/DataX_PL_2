@@ -1,5 +1,5 @@
 import pygame
-from .base import State
+from States.base import State
 
 class PlayerSelect(State):
     def __init__(self, assets=None):

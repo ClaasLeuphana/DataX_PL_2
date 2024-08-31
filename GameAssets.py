@@ -48,6 +48,7 @@ class GameAssets:
         self.Card0 = load_image("Playingcard 0.png")
         self.CardN1 = load_image("Playingcard -1.png")
         self.CardN2 = load_image("Playingcard -2.png")
+        self.background = load_image("Background.jpg")  # Hintergrundbild
 
         # Laden der Sounds
         self.card_turn_sfx = load_sound("flipcard.mp3")

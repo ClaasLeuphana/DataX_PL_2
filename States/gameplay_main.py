@@ -1,4 +1,4 @@
-from .base import State
+from States.base import State
 from GameAssets import *
 
 
@@ -91,7 +91,7 @@ class Gameplay(State):
 
                     # Überprüfen, ob das Spiel vorbei ist oder der Zug endet
                     if self.check_all_cards_visible(self.current_player):
-                        self.game_over()
+                        self.round_over() #change here fome game over to round over
                     else:
                         self.end_turn()
 
@@ -111,7 +111,7 @@ class Gameplay(State):
 
                     # Überprüfen, ob das Spiel vorbei ist oder der Zug endet
                     if self.check_all_cards_visible(self.current_player):
-                        self.game_over()
+                        self.round_over() #change here fome game over to round over
                     else:
                         self.end_turn()
 
@@ -247,11 +247,7 @@ class Gameplay(State):
                 return False
         return True
 
-    def game_over(self):
-        """Wechselt den Spielzustand zu 'Game Over'."""
-        self.persist['winner'] = self.current_player + 1  # Der Gewinner ist der aktuelle Spieler
-        self.next_state = "GAMEOVER"
-        self.done = True
+
 
     def draw(self, surface):
         """Zeichnet das Spielfeld, den Stapel, das Deck und die Karten der Spieler."""
@@ -404,7 +400,25 @@ class Gameplay(State):
                 rotated_text = pygame.transform.rotate(text, 180)  # Schrift um 180 Grad drehen
             elif i == 3:  # Spieler rechts
                 x = self.screen.get_width() - 3 * (self.card_height + self.card_gap)
-                y = self.screen.get_height() / 2 - 4 * (self.card_width + self.card_gap) + self.card_gap
+                y = self.screen.get_height() / 2 - 4 * (self.card_width + self.card_gap) - 2 * self.card_gap
                 rotated_text = pygame.transform.rotate(text, 90)  # Schrift um 270 Grad drehen (oder -90 Grad)
 
             self.screen.blit(rotated_text, (x, y))
+
+    def round_over(self):
+        """Wechselt den Spielzustand zu 'Round Summary' und berechnet die Punkte."""
+        current_round_score = []
+        for i in range(self.player_count):
+            score = self.Calculate_player_score(i)
+            current_round_score.append(score)
+
+        self.persist['current_round_score'] = current_round_score
+        self.next_state = "SCOREBOARD"
+        self.done = True
+
+    def game_over(self):
+        """Handles the game over logic."""
+        print("Game Over!")
+        # Add any additional game over logic here, such as transitioning to a game over screen or resetting the game state.
+        self.done = True
+        self.next_state = "GAME_OVER"  # Example of transitioning to a game over state
