@@ -19,7 +19,7 @@ class Options(State):
         # Erstellen des "Main Menu"-Buttons
         self.button_font = pygame.font.Font(None, 40)
         self.button_text = self.button_font.render("Main Menu", True, pygame.Color("white"))
-        self.button_rect = self.button_text.get_rect(topleft=(10, self.screen_rect.height - self.button_text.get_height() - 10))
+        self.button_rect = self.button_text.get_rect(topleft=(10, self.screen_rect.height - self.button_text.get_height() - 30))
 
     def get_event(self, event):
         if event.type == pygame.QUIT:
@@ -59,10 +59,11 @@ class Options(State):
     def resize(self, width, height):
         """Passen Sie das Menü an die neue Bildschirmgröße an."""
         self.screen_rect = pygame.Rect(0, 0, width, height)
+        # Aktualisieren Sie die Position der Slider
         self.music_slider.update_position(self.screen_rect.centerx - 150, self.screen_rect.centery - 50)
         self.sfx_slider.update_position(self.screen_rect.centerx - 150, self.screen_rect.centery + 50)
-        self.button_rect.topleft = (10, self.screen_rect.height - self.button_text.get_height() - 10)
-
+        # Aktualisieren Sie die Position des "Main Menu"-Buttons
+        self.button_rect.topleft = (10, self.screen_rect.height - self.button_text.get_height() - 30)
 
 
 class Slider:
@@ -71,6 +72,7 @@ class Slider:
         self.color = pygame.Color("gray")
         self.knob_color = pygame.Color("red")
         self.value = initial_value
+        # Setze die Position des Knobs basierend auf dem initialen Wert
         self.knob_rect = pygame.Rect(x + width * initial_value - 10, y - 5, 20, height + 10)
         self.dragging = False  # Initialisiert den dragging-Zustand
 
@@ -82,16 +84,23 @@ class Slider:
             self.dragging = False  # Stop dragging
         elif event.type == pygame.MOUSEMOTION:
             if self.dragging:
+                # Berechnen Sie den neuen X-Wert und begrenzen Sie ihn auf den Slider-Bereich
                 new_x = min(max(event.pos[0], self.rect.left), self.rect.right)
+                # Aktualisieren Sie die Knopfposition basierend auf der Mausbewegung
                 self.knob_rect.x = new_x - self.knob_rect.width // 2
+                # Aktualisieren Sie den Wert basierend auf der neuen Knopfposition
                 self.value = (self.knob_rect.centerx - self.rect.left) / self.rect.width
                 return True  # Bedeutet, dass der Slider angepasst wurde
         return False
 
     def draw(self, surface):
+        # Zeichne den Slider-Bereich
         pygame.draw.rect(surface, self.color, self.rect)
+        # Zeichne den Slider-Knopf
         pygame.draw.rect(surface, self.knob_color, self.knob_rect)
 
     def update_position(self, x, y):
+        """Aktualisiert die Position des Sliders und Knopfes."""
         self.rect.topleft = (x, y)
+        # Knopfposition relativ zum neuen Slider aktualisieren, basierend auf dem aktuellen Wert
         self.knob_rect.center = (x + self.rect.width * self.value, y + self.rect.height // 2)
