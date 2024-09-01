@@ -1,11 +1,11 @@
 import pygame
 from .base import State
 
-class Menu(State):
+class ClientLobby(State):
     def __init__(self, assets=None):
-        super(Menu, self).__init__()
+        super(ClientLobby, self).__init__()
         self.assets = assets
-        self.options = ["Start Game", "Rules", "Options", "Quit Game"]  # Neuer Button für "Rules"
+        self.options = ["Work in Progress", "Quit Game"]  # Neuer Button für "Rules"
         self.next_state = "PLAYER_SELECT"  # Dies wird durch handle_action angepasst
         self.active_index = 0
         self.font = pygame.font.Font(None, 50)
@@ -23,15 +23,9 @@ class Menu(State):
 
     def handle_action(self):
         if self.active_index == 0:  # Start Game
-            self.next_state = "GAMEMODE"
+            self.next_state = "MENU"
             self.done = True
-        elif self.active_index == 1:  # Rules
-            self.next_state = "RULES"
-            self.done = True
-        elif self.active_index == 2:  # Options
-            self.next_state = "OPTIONS"
-            self.done = True
-        elif self.active_index == 3:  # Quit Game
+        elif self.active_index == 1:  # Quit Game
             self.quit = True
 
     def get_event(self, event):

@@ -6,6 +6,9 @@ from States.game_over import GameOver
 from States.Scoreboard import Scoreboard
 from States.Rules import Rules
 from States.options import Options
+from States.gamemode import Gamemode
+from States.host_lobby import HostLobby
+from States.client_lobby import ClientLobby
 from Game import Game
 from GameAssets import GameAssets
 
@@ -35,6 +38,9 @@ class Main:
             "PLAYER_SELECT": PlayerSelect(assets=self.assets),
             "RULES": Rules(assets=self.assets),
             "OPTIONS": Options(assets=self.assets),
+            "GAMEMODE": Gamemode(assets=self.assets),
+            "HOST_LOBBY": HostLobby(assets=self.assets),
+            "CLIENT_LOBBY": ClientLobby(assets=self.assets),
             "SCOREBOARD": Scoreboard(assets=self.assets),
             "GAMEPLAY": Gameplay(assets=self.assets),
             'GAMEOVER': GameOver(assets=self.assets)

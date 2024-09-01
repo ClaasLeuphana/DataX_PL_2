@@ -15,7 +15,7 @@ class PlayerSelect(State):
         self.screen_rect = pygame.display.get_surface().get_rect()
 
         # Erstellen des "Main Menu"-Buttons
-        self.button_text = self.button_font.render("Main Menu", True, pygame.Color("white"))
+        self.button_text = self.button_font.render("Back", True, pygame.Color("white"))
         self.button_rect = self.button_text.get_rect(topleft=(10, self.screen_rect.height - self.button_text.get_height() - 30))
 
         # Initiale Größe anpassen
@@ -61,7 +61,7 @@ class PlayerSelect(State):
                 self.done = True
             # Überprüfen, ob der "Main Menu"-Button geklickt wurde
             elif self.button_rect.collidepoint(mouse_pos):
-                self.next_state = "MENU"
+                self.next_state = "GAMEMODE"
                 self.done = True
 
     def draw(self, surface):
