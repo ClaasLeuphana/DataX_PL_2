@@ -43,7 +43,7 @@ class Rules(State):
 
         # Erstellen des "Main Menu"-Buttons
         button_text = self.button_font.render("Main Menu", True, pygame.Color("white"))
-        self.button_rect = button_text.get_rect(topleft=(10, self.screen_rect.height - button_text.get_height() - 30))
+        self.button_rect = button_text.get_rect(topleft=(10, self.screen_rect.height - button_text.get_height() - 20))
         self.button_text = button_text
 
     def get_event(self, event):
