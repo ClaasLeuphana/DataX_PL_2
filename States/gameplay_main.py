@@ -62,6 +62,44 @@ class Gameplay(State):
 
         self.cards_turned = 0
         self.initial_round = True  # Setzt die Anfangsrunde
+    def determine_starting_player(self):
+        """Bestimmt den Spieler, der beginnt, basierend auf der höchsten Summe der ersten zwei aufgedeckten Karten."""
+        highest_sum = -1
+        starting_player = 0
+
+        for i in range(self.player_count):
+            visible_cards = [card for card in self.players_hands[i] if card.visible]
+            if len(visible_cards) >= 2:
+                card_sum = visible_cards[0].value + visible_cards[1].value
+                if card_sum > highest_sum:
+                    highest_sum = card_sum
+                    starting_player = i
+
+        self.current_player = starting_player
+
+        # Zeige den Startspieler für 5 Sekunden an
+        self.show_starting_player_message(starting_player + 1)
+    def show_starting_player_message(self, player_number):
+        """Zeigt eine Nachricht an, welcher Spieler beginnt, und wartet 5 Sekunden."""
+        message = f"Spieler {player_number} beginnt!"
+        text_surface = self.font.render(message, True, pygame.Color("yellow"))
+        text_rect = text_surface.get_rect(center=self.screen_rect.center)
+
+        # Schwarze Box hinter Text anzeigen
+        background_rect = pygame.Rect(
+            text_rect.left - 10,
+            text_rect.top - 5,
+            text_rect.width + 20,
+            text_rect.height + 10
+        )
+
+        # Hintergrundrechteck schwarz füllen
+        pygame.draw.rect(self.screen, pygame.Color("black"), background_rect)
+
+        # Nachricht für 5 Sekunden anzeigen
+        self.screen.blit(text_surface, text_rect)
+        pygame.display.flip()
+        pygame.time.wait(5000)
 
     def get_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -107,8 +145,6 @@ class Gameplay(State):
                     if not card.visible:
                         self.deck.turn_card(card)
                         self.check_three_in_a_row(self.current_player)
-                    #elif card.visible:
-                        #self.highlight_card(card)
 
                     # Überprüfen, ob das Spiel vorbei ist oder der Zug endet
                     if self.check_all_cards_visible(self.current_player):
@@ -130,6 +166,7 @@ class Gameplay(State):
                     self.cards_turned = 0  # Setzt die Anzahl aufgedeckter Karten für den nächsten Spieler zurück
                     if self.current_player == 0:  # Nach der letzten Runde des letzten Spielers
                         self.initial_round = False  # Schaltet in die reguläre Spielrunde um
+                        self.determine_starting_player()  # Jetzt den Startspieler bestimmen
 
     def handle_deck_click(self):
         """Legt die oberste Karte des Decks auf den Stack und erlaubt dann eine Aktion."""
@@ -366,10 +403,6 @@ class Gameplay(State):
                     if card1.value == card2.value == card3.value and card1.value > 0 and card1.visible and card2.visible and card3.visible:
                         remove_three_in_a_row([card1, card2, card3])
 
-    def highlight_card(self, card):
-        """Hebt die Karte des Spielers hervor oder hebt die Hervorhebung auf."""
-        card.highlighted = not card.highlighted
-        self.check_three_in_a_row(self.current_player)  # Überprüft nach dem Hervorheben sofort die Reihen
 
     def Calculate_player_score(self, player_index):
         """Berechnet die Punktzahl eines Spielers basierend auf den offenen Karten."""
