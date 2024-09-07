@@ -1,5 +1,6 @@
 from States.base import State
 from GameAssets import *
+import time
 
 
 def remove_three_in_a_row(cards):
@@ -106,8 +107,8 @@ class Gameplay(State):
                     if not card.visible:
                         self.deck.turn_card(card)
                         self.check_three_in_a_row(self.current_player)
-                    elif card.visible:
-                        self.highlight_card(card)
+                    #elif card.visible:
+                        #self.highlight_card(card)
 
                     # Überprüfen, ob das Spiel vorbei ist oder der Zug endet
                     if self.check_all_cards_visible(self.current_player):
@@ -259,6 +260,7 @@ class Gameplay(State):
         self.draw_deck()
         self.draw_stack()
         self.draw_player_score()
+        pygame.display.flip()
 
     def display_current_player(self, surface):
         """Zeigt den aktuellen Spieler an."""
@@ -347,7 +349,7 @@ class Gameplay(State):
 
         # Überprüfe alle möglichen 3er-Reihen vertikal
         for col in range(cols):
-            for row in range(rows - 2):  # Es gibt nur rows - 2 Möglichkeiten, eine 3er Reihe zu beginnen
+            for row in range(rows - 2):  # Es gibt nur rows - 2 Möglichkeiten, eine 3er-Reihe zu beginnen
                 index1 = row * cols + col
                 index2 = (row + 1) * cols + col
                 index3 = (row + 2) * cols + col
@@ -407,6 +409,17 @@ class Gameplay(State):
 
     def round_over(self):
         """Wechselt den Spielzustand zu 'Round Summary' und berechnet die Punkte."""
+        # 1. Aufdecken aller noch nicht aufgedeckten Karten aller Spieler
+        for i in range(self.player_count):
+            for card in self.players_hands[i]:
+                if not card.visible:
+                    self.deck.turn_card(card)
+
+        # 2. Pause für 5 Sekunden einfügen
+        self.draw(self.screen)  # Aktualisiert den Bildschirm, damit die Spieler die aufgedeckten Karten sehen
+        time.sleep(5)
+
+        # 3. Berechne die Punkte und wechsle den Zustand
         current_round_score = []
         for i in range(self.player_count):
             score = self.Calculate_player_score(i)

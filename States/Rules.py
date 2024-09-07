@@ -25,6 +25,7 @@ class Rules(State):
         )
         self.scroll_offset = 0
         self.scroll_speed = 5  # Geschwindigkeit des Scrollens
+        self.rendered_text = []
         self.text_rect = None
         self.button_rect = None
         self.update_text()
@@ -38,13 +39,11 @@ class Rules(State):
 
         # Berechnen der Höhe des gesamten Textes
         total_height = sum(line.get_height() for line in self.rendered_text)
-        self.text_rect = pygame.Rect(
-            0, 0, self.screen_rect.width, total_height
-        )
+        self.text_rect = pygame.Rect(0, 0, self.screen_rect.width, total_height)
 
-        # Erstellen des Buttons
+        # Erstellen des "Main Menu"-Buttons
         button_text = self.button_font.render("Main Menu", True, pygame.Color("white"))
-        self.button_rect = button_text.get_rect(topleft=(10, self.screen_rect.height - button_text.get_height() - 10))
+        self.button_rect = button_text.get_rect(topleft=(10, self.screen_rect.height - button_text.get_height() - 20))
         self.button_text = button_text
 
     def get_event(self, event):
@@ -62,7 +61,6 @@ class Rules(State):
     def draw(self, surface):
         surface.fill(pygame.Color("blue"))
 
-
         y_offset = self.scroll_offset
         for line in self.rendered_text:
             surface.blit(line, (self.screen_rect.centerx - line.get_width() / 2, y_offset))
@@ -77,13 +75,13 @@ class Rules(State):
         if keys[pygame.K_UP]:
             self.scroll_offset = max(self.scroll_offset - self.scroll_speed, 0)
         if keys[pygame.K_DOWN]:
-            self.scroll_offset = min(self.scroll_offset + self.scroll_speed,
-                                     self.text_rect.height - self.screen_rect.height)
+            # Beschränken Sie das Scrollen auf den Bereich des Textes, der über den Bildschirm hinausgeht
+            self.scroll_offset = min(self.scroll_offset + self.scroll_speed, max(0, self.text_rect.height - self.screen_rect.height))
 
     def resize(self, width, height):
-        """Passt den Textbereich an eine neue Bildschirmgröße an."""
+        """Passt den Textbereich und den Button an eine neue Bildschirmgröße an."""
         self.screen_rect = pygame.Rect(0, 0, width, height)
-        self.update_text()  # Erneut Text-Render-Objekt berechnen
+        self.update_text()  # Aktualisiere den Text und Button-Positionen bei Größenänderung
 
     def cleanup(self):
         # Bereinigen vor dem Zustandswechsel

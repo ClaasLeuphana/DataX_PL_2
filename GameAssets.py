@@ -31,7 +31,7 @@ class GameAssets:
     def load_assets(self):
         """Lädt alle Bilder und Sounds und speichert sie als Instanzvariablen."""
         # Laden der Bilder
-        self.Board = load_image("Board.png")
+
         self.CardBack = load_image("Back of Card.png")
         self.Card12 = load_image("Playingcard 12.jpg")
         self.Card11 = load_image("Playingcard 11.jpg")
@@ -48,7 +48,7 @@ class GameAssets:
         self.Card0 = load_image("Playingcard 0.png")
         self.CardN1 = load_image("Playingcard -1.png")
         self.CardN2 = load_image("Playingcard -2.png")
-        self.background = load_image("Background.jpg")  # Hintergrundbild
+        self.background = load_image("Background.png")  # Hintergrundbild
 
         # Laden der Sounds
         self.card_turn_sfx = load_sound("flipcard.mp3")
