@@ -7,6 +7,8 @@ class A_PlayerSelect(State):
         self.assets = assets
         self.player_count = 1  # Anzahl der Spieler (1 = aktiver Spieler)
         self.max_players = 4  # Maximal 4 Spieler (inkl. automatisierter Gegner)
+        self.min_players_required = 2  # Mindestanzahl von Spielern
+        self.warn_message = None  # Nachricht, wenn nicht genügend Spieler ausgewählt sind
         self.active_player_index = 0  # Index des aktiven Spielers (0 = Mensch)
         self.selected_players = [True, False, False, False]  # Mensch ist aktiv, Rest sind Gegner
         self.bot_difficulties = ["Medium"] * 4  # Startschwierigkeit für die Bots (1 Mensch + 3 Bots)
@@ -37,6 +39,7 @@ class A_PlayerSelect(State):
 
         # Initiale Größe anpassen
         self.resize(self.screen_rect.width, self.screen_rect.height)
+
 
     def resize(self, width, height):
         """Passt die GUI-Elemente an die neue Fenstergröße an."""
@@ -83,7 +86,13 @@ class A_PlayerSelect(State):
 
             # Bestätigung
             if self.confirm_rect.collidepoint(mouse_pos):
-                self.done = True
+                active_players = sum(self.selected_players)
+                if active_players >= self.min_players_required:
+                    self.player_count = active_players  # Setze die Spielerzahl auf die Anzahl der aktiv ausgewählten Spieler
+                    self.done = True
+                else:
+                    self.warn_message = "Bitte wähle mindestens 2 Spieler aus"
+
 
             # Zurück zum Hauptmenü
             elif self.back_rect.collidepoint(mouse_pos):
@@ -183,6 +192,11 @@ class A_PlayerSelect(State):
         # Zeichne den Bestätigungs- und Zurück-Button
         surface.blit(self.confirm_text, self.confirm_rect)
         surface.blit(self.back_text, self.back_rect)
+
+        # Zeige die Warnmeldung, wenn nicht genügend Spieler ausgewählt sind
+        if self.warn_message:
+            warn_text = self.font.render(self.warn_message, True, pygame.Color("red"))
+            surface.blit(warn_text, (self.screen_rect.centerx - warn_text.get_width() // 2, self.screen_rect.centery))
 
     def cleanup(self):
         # Speichere die Anzahl der Spieler und deren Einstellungen
