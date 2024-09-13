@@ -1,5 +1,6 @@
 class State:
-    def __init__(self):
+    def __init__(self, assets=None):
+        self.assets = assets
         self.done = False
         self.quit = False
         self.next_state = None

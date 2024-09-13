@@ -1,12 +1,17 @@
 import pygame
 from States.menu import Menu
 from States.player_select import PlayerSelect
+from States.A_player_select import A_PlayerSelect
 from States.gameplay_main import Gameplay
+from States.gameplay_automated import Gameplay_Automated
 from States.game_over import GameOver
+from States.A_Gameover import A_Gameover
 from States.Scoreboard import Scoreboard
+from States.A_Scoreboard import A_Scoreboard
 from States.Rules import Rules
 from States.options import Options
 from States.gamemode import Gamemode
+from States.local import Local
 from States.host_lobby import HostLobby
 from States.client_lobby import ClientLobby
 from Game import Game
@@ -19,6 +24,8 @@ class Main:
 
         # Initialisiere die GameAssets
         self.assets = GameAssets()  # Erstellen einer Instanz von GameAssets
+
+
 
         # Verwende Bildschirminformationen, um die Größe des Fensters zu bestimmen
         self.screen_info = pygame.display.Info()
@@ -36,14 +43,19 @@ class Main:
         states = {
             "MENU": Menu(assets=self.assets),
             "PLAYER_SELECT": PlayerSelect(assets=self.assets),
+            "A_PLAYER_SELECT": A_PlayerSelect(assets=self.assets),
             "RULES": Rules(assets=self.assets),
             "OPTIONS": Options(assets=self.assets),
             "GAMEMODE": Gamemode(assets=self.assets),
             "HOST_LOBBY": HostLobby(assets=self.assets),
             "CLIENT_LOBBY": ClientLobby(assets=self.assets),
+            "LOCAL": Local(assets=self.assets),
             "SCOREBOARD": Scoreboard(assets=self.assets),
+            "A_SCOREBOARD":A_Scoreboard(assets=self.assets),
             "GAMEPLAY": Gameplay(assets=self.assets),
-            'GAMEOVER': GameOver(assets=self.assets)
+            "GAMEPLAY_AUTOMATED": Gameplay_Automated(assets=self.assets),
+            'GAMEOVER': GameOver(assets=self.assets),
+            "A_GAMEOVER": A_Gameover(assets=self.assets)
         }
 
         # Spielinstanz erstellen
@@ -75,3 +87,4 @@ class Main:
 if __name__ == "__main__":
     main = Main()
     main.run()
+

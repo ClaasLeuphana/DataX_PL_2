@@ -1,5 +1,5 @@
 import pygame
-from .base import State
+from States.base import State
 
 class Rules(State):
     def __init__(self, assets=None):
@@ -9,20 +9,25 @@ class Rules(State):
         self.button_font = pygame.font.Font(None, 40)  # Schriftart für den Button
         self.screen_rect = pygame.display.get_surface().get_rect()
         self.text = (
-            "1. Ziel des Spiels\n"
-            "Das Ziel des Spiels ist es, alle deine Karten aufzudecken und die meisten Punkte zu sammeln.\n\n"
-            "2. Spielvorbereitung\n"
-            "Zu Beginn des Spiels wird ein Stapel aus Karten erstellt und gemischt. Jeder Spieler erhält eine Handvoll Karten.\n\n"
-            "3. Spielablauf\n"
-            "In jedem Zug kann der Spieler eine Karte von seinem Stapel aufdecken oder eine Karte vom Deck ziehen.\n\n"
-            "4. Karten tauschen\n"
-            "Wenn ein Spieler eine Karte von seinem Stapel aufgedeckt hat, kann er diese mit einer Karte vom Deck tauschen.\n\n"
-            "5. Spielende\n"
-            "Das Spiel endet, wenn alle Karten aufgedeckt sind oder wenn ein Spieler alle seine Karten gesammelt hat.\n\n"
-            "6. Gewinnbedingungen\n"
-            "Der Spieler mit den meisten Punkten am Ende des Spiels gewinnt.\n\n"
-            "Drücke eine beliebige Taste, um zurück zum Hauptmenü zu gelangen."
+            "Ziel des Spiels: Das Ziel ist es, am Ende des Spiels die wenigsten Punkte zu haben. "
+            "Das Spiel wird über mehrere Runden gespielt, bis ein Spieler 100 oder mehr Punkte erreicht hat. "
+            "Der Spieler mit den wenigsten Punkten gewinnt.\n\n"
+            "Spielvorbereitung: Jeder Spieler erhält 12 Karten, die verdeckt vor ihm ausgelegt werden. "
+            "Zwei Karten werden offen hingelegt, der Rest bleibt verdeckt. Der Spieler mit der höchsten Punktzahl der offenen Karten beginnt.\n\n"
+            "Spielablauf:\n"
+            "1. Der aktive Spieler hat die Wahl, eine der folgenden Aktionen durchzuführen:\n"
+            "   - Eine offene Karte vom Ablagestapel ziehen und diese mit einer offenen oder verdeckten Karte auf seinem Tisch tauschen.\n"
+            "   - Eine verdeckte Karte vom Nachziehstapel ziehen und diese mit einer offenen oder verdeckten Karte auf seinem Tisch tauschen.\n"
+            "   - Keine Karte ziehen und stattdessen eine seiner verdeckten Karten aufdecken.\n"
+            "2. Wenn ein Spieler drei Karten mit demselben Wert in einer Spalte hat, werden diese Karten entfernt. Dies gilt auch für Minuspunkt-Karten.\n\n"
+            "Rundenende:\n"
+            "Eine Runde endet, wenn ein Spieler seine letzte Karte aufdeckt und behauptet, in dieser Runde die wenigsten Punkte zu haben.\n"
+            "Wenn dies nicht zutrifft, werden seine Punkte der Runde verdoppelt.\n"
+            "Nachdem der Spieler seine letzte Karte aufgedeckt hat, haben die anderen Spieler jeweils noch einen Zug.\n"
+            "Danach werden alle restlichen Karten aufgedeckt und die Punkte gezählt.\n\n"
+            "Viel Spaß beim Spielen!"
         )
+
         self.scroll_offset = 0
         self.scroll_speed = 5  # Geschwindigkeit des Scrollens
         self.rendered_text = []
@@ -33,7 +38,6 @@ class Rules(State):
 
     def update_text(self):
         """Berechnet die Textgröße und erstellt das Text-Render-Objekt."""
-        # Erstellen des Text-Render-Objekts
         lines = self.text.split('\n')
         self.rendered_text = [self.font.render(line, True, pygame.Color("white")) for line in lines]
 
@@ -45,6 +49,10 @@ class Rules(State):
         button_text = self.button_font.render("Main Menu", True, pygame.Color("white"))
         self.button_rect = button_text.get_rect(topleft=(10, self.screen_rect.height - button_text.get_height() - 20))
         self.button_text = button_text
+
+        # Berechne den Abstand des Textes vom oberen Rand des Bildschirms
+        self.text_top_margin = 50  # Abstand vom oberen Rand
+        self.max_scroll = max(0, self.text_rect.height - self.screen_rect.height + self.text_top_margin)
 
     def get_event(self, event):
         if event.type == pygame.QUIT:
@@ -59,11 +67,12 @@ class Rules(State):
                 self.done = True
 
     def draw(self, surface):
-        surface.fill(pygame.Color("blue"))
+        surface.fill(pygame.Color("black"))
 
-        y_offset = self.scroll_offset
+        # Zeichne den Text
+        y_offset = self.scroll_offset + self.text_top_margin
         for line in self.rendered_text:
-            surface.blit(line, (self.screen_rect.centerx - line.get_width() / 2, y_offset))
+            surface.blit(line, (self.screen_rect.left + 10, y_offset))
             y_offset += line.get_height()
 
         # Zeichne den Button
@@ -76,7 +85,7 @@ class Rules(State):
             self.scroll_offset = max(self.scroll_offset - self.scroll_speed, 0)
         if keys[pygame.K_DOWN]:
             # Beschränken Sie das Scrollen auf den Bereich des Textes, der über den Bildschirm hinausgeht
-            self.scroll_offset = min(self.scroll_offset + self.scroll_speed, max(0, self.text_rect.height - self.screen_rect.height))
+            self.scroll_offset = min(self.scroll_offset + self.scroll_speed, self.max_scroll)
 
     def resize(self, width, height):
         """Passt den Textbereich und den Button an eine neue Bildschirmgröße an."""
@@ -86,3 +95,4 @@ class Rules(State):
     def cleanup(self):
         # Bereinigen vor dem Zustandswechsel
         return {}
+

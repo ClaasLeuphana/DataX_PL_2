@@ -1,5 +1,5 @@
 import pygame
-from .base import State
+from States.base import State
 
 class Gamemode(State):
     def __init__(self, assets=None):
@@ -20,6 +20,7 @@ class Gamemode(State):
 
         # Initiale Positionen der Textelemente setzen
         self.update_text_positions()
+        self.background = pygame.image.load("C:/DataX - Lilly2/Grafiken/Background.jpg")  # Pfad zum Hintergrundbild
 
     def render_text(self, index):
         color = pygame.Color("red") if index == self.active_index else pygame.Color("white")
@@ -38,7 +39,7 @@ class Gamemode(State):
             self.next_state = "CLIENT_LOBBY"
             self.done = True
         elif self.active_index == 2:  # Local Game
-            self.next_state = "PLAYER_SELECT"
+            self.next_state = "LOCAL"
             self.done = True
         elif self.active_index == 3:  # Quit Game
             self.quit = True
@@ -62,7 +63,10 @@ class Gamemode(State):
                 self.done = True
 
     def draw(self, surface):
-        surface.fill(pygame.Color("blue"))
+        # Skaliere das Hintergrundbild
+        scaled_background = pygame.transform.scale(self.background, (self.screen_rect.width, self.screen_rect.height))
+        surface.blit(scaled_background, (0, 0))  # Zeichne den skalierten Hintergrund
+
         # Zeichne die Menüoptionen
         for index, option in enumerate(self.options):
             text_render = self.render_text(index)

@@ -12,25 +12,43 @@ class Scoreboard(State):
         self.active_index = 0  # Verfolgt die ausgewählte Option
         self.screen_rect = None
 
+
     def startup(self, persistent):
         self.persist = persistent
         self.round_scores = self.persist.get('round_scores', [])
         self.player_count = self.persist.get('player_count', 1)
         self.total_scores = self.persist.get('total_scores', [0] * self.player_count)
+        self.player_names = self.persist.get('player_names', [f"Player {i + 1}" for i in range(self.player_count)])
 
-        # Initialisiere screen_rect basierend auf der Bildschirmgröße
-        screen = pygame.display.get_surface()  # Hole die aktuelle Anzeigefläche
-        self.screen_rect = screen.get_rect()  # Setze screen_rect auf das Rechteck der Oberfläche
+        screen = pygame.display.get_surface()
+        self.screen_rect = screen.get_rect()
 
-        # Füge die aktuellen Rundenscores zur Liste der Rundenscores hinzu
         self.current_round_score = self.persist.get('current_round_score', [0] * self.player_count)
+        first_to_finish = self.persist.get('first_to_finish', None)
+
+        if first_to_finish is not None:
+            min_score = min(self.current_round_score)
+            if self.current_round_score[first_to_finish - 1] != min_score:
+                self.current_round_score[first_to_finish - 1] *= 2
+
+
         self.round_scores.append(self.current_round_score)
         for i in range(self.player_count):
             self.total_scores[i] += self.current_round_score[i]
 
-        # Speichere die aktualisierten Scores zurück in persistent
         self.persist['round_scores'] = self.round_scores
         self.persist['total_scores'] = self.total_scores
+
+        self.check_game_over()
+
+
+    def check_game_over(self):
+        """Überprüft, ob einer der Spieler 100 oder mehr Punkte hat."""
+        for score in self.total_scores:
+            if score >= 100:
+                self.next_state = "GAMEOVER"  # Wechsle zum Game Over State
+                self.done = True
+                break  # Beende die Überprüfung, sobald ein Spieler 100 erreicht
 
     def get_event(self, event):
         if event.type == pygame.KEYDOWN:
@@ -56,12 +74,11 @@ class Scoreboard(State):
     def draw(self, screen):
         """Zeichnet das Scoreboard und die Optionen."""
 
-       #Hintergrund von Hintergrundbild von GameAssets
-
-        background_scaled = pygame.transform.scale(self.assets.background,(self.screen_rect.width, self.screen_rect.height))
+       # Hintergrund von Hintergrundbild von GameAssets
+        background_scaled = pygame.transform.scale(self.assets.background, (self.screen_rect.width, self.screen_rect.height))
         screen.blit(background_scaled, (0, 0))
 
-        #Zeichne die Überschrift Scoreboard
+        # Zeichne die Überschrift Scoreboard
         header_text = self.font.render("Scoreboard", True, pygame.Color("white"))
         screen.blit(header_text, (self.screen_rect.centerx - header_text.get_width() // 2, 50))
 
@@ -76,7 +93,7 @@ class Scoreboard(State):
         screen.blit(header_text, (x_offset, y_offset))
 
         for i in range(self.player_count):
-            player_header_text = self.font.render(f"Player {i + 1}", True, pygame.Color("white"))
+            player_header_text = self.font.render(self.player_names[i], True, pygame.Color("white"))
             screen.blit(player_header_text, (x_offset + (i + 1) * column_width, y_offset))
 
         # Zeichne die Rundenscores und Gesamtpunkte
@@ -105,7 +122,6 @@ class Scoreboard(State):
         color = pygame.Color("red") if index == self.active_index else pygame.Color("white")
         return self.font.render(self.options[index], True, color)
 
-
     def get_text_position(self, text, index):
         # Positioniere die Optionen auf dem Bildschirm
         if index == 0:  # "Neue Runde" in der rechten unteren Ecke
@@ -122,6 +138,9 @@ class Scoreboard(State):
             text_rect = self.get_text_position(text_render, index)
             if text_rect.collidepoint(mouse_pos):
                 self.active_index = index
+
+        # Überprüfe erneut, ob das Spiel vorbei ist
+        self.check_game_over()
 
     def cleanup(self):
         return self.persist

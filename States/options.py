@@ -1,5 +1,5 @@
 import pygame
-from .base import State
+from States.base import State
 
 class Options(State):
     def __init__(self, assets=None):
@@ -20,6 +20,7 @@ class Options(State):
         self.button_font = pygame.font.Font(None, 40)
         self.button_text = self.button_font.render("Main Menu", True, pygame.Color("white"))
         self.button_rect = self.button_text.get_rect(topleft=(10, self.screen_rect.height - self.button_text.get_height() - 30))
+        self.background = pygame.image.load("C:/DataX - Lilly2/Grafiken/Background.jpg")  # Pfad zum Hintergrundbild
 
     def get_event(self, event):
         if event.type == pygame.QUIT:
@@ -43,7 +44,10 @@ class Options(State):
                 self.assets.card_turn_sfx.play()
 
     def draw(self, surface):
-        surface.fill(pygame.Color("black"))
+        # Skaliere das Hintergrundbild
+        scaled_background = pygame.transform.scale(self.background, (self.screen_rect.width, self.screen_rect.height))
+        surface.blit(scaled_background, (0, 0))  # Zeichne den skalierten Hintergrund
+
         self.music_slider.draw(surface)
         self.sfx_slider.draw(surface)
 
@@ -104,3 +108,5 @@ class Slider:
         self.rect.topleft = (x, y)
         # Knopfposition relativ zum neuen Slider aktualisieren, basierend auf dem aktuellen Wert
         self.knob_rect.center = (x + self.rect.width * self.value, y + self.rect.height // 2)
+
+

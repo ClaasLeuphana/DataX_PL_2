@@ -49,6 +49,10 @@ class GameAssets:
         self.CardN1 = load_image("Playingcard -1.png")
         self.CardN2 = load_image("Playingcard -2.png")
         self.background = load_image("Background.jpg")  # Hintergrundbild
+        self.Bot1 = load_image("Bot_1.png") #Bild für Bot1
+        self.Bot2 = load_image("Bot_2.png")
+        self.Bot3 = load_image("Bot_3.png")
+        self.Player = load_image("Player.png")
 
         # Laden der Sounds
         self.card_turn_sfx = load_sound("flipcard.mp3")
@@ -178,9 +182,11 @@ class Deck:
     def draw(self, stack):
         """Bewegt die oberste Karte des Decks auf den Stack und dreht sie um."""
         if self.cards:
-            top_card = self.cards.pop()
-            top_card.visible = True
-            stack.add_card(top_card)
+            if self.cards:
+                top_card = self.cards.pop()
+                stack.add_card(top_card)
+                return top_card
+            return None
 
     def __len__(self):
         return len(self.cards)
@@ -190,6 +196,7 @@ class Deck:
 class Stack:
     def __init__(self):
         self.cards = []
+        self.saved_value = None  # Variable zum Speichern des Werts der obersten Karte
 
     def add_card(self, card):
         """Fügt eine Karte zum Stapel hinzu."""
@@ -234,6 +241,18 @@ class Stack:
         """Überprüft, ob der Stapel leer ist."""
         return len(self.cards) == 0
 
+#zum speichern des Wertes der obersten Karte
+def save_top_card_value(self):
+    """Speichert den Wert der obersten Karte des Stacks, falls vorhanden."""
+    if self.cards:
+        self.saved_value = self.cards[-1].value
+    else:
+        self.saved_value = None
+
+
+def get_saved_value(self):
+    """Gibt den gespeicherten Wert der obersten Karte zurück, falls vorhanden."""
+    return self.saved_value
 
 class Button:
     def __init__(self, text, x, y, width, height, font, text_color, button_color, action=None):

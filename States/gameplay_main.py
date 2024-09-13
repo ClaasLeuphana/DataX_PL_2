@@ -1,3 +1,4 @@
+
 from States.base import State
 from GameAssets import *
 import time
@@ -17,14 +18,20 @@ class Gameplay(State):
         self.current_player = 0
         self.cards_turned = 0
         self.initial_round = True
-        self.stack_clicked = False  # Trackt, ob der Stack angeklickt wurde
-        self.deck_clicked = False  # Trackt, ob das Deck angeklickt wurde
-        self.deck_action_taken = False  # Status der Deck-Aktion
+        self.stack_clicked = False
+        self.deck_clicked = False
+        self.deck_action_taken = False
         self.font = pygame.font.Font(None, 50)
         self.screen = pygame.display.get_surface()
         self.screen_rect = self.screen.get_rect()
         self.card_width, self.card_height, self.card_gap = self.get_card_measurements()
         self.selected_stack_card = None
+        self.first_to_finish = None
+        self.last_turn_active = False  # Flag für die letzte Runde
+        self.last_turn_player = None  # Spieler, der die letzte Karte umgedreht hat
+        self.turn_counter = 0  # Zählt die Züge nach Start des letzten Zugs
+        self.player_names = []  # Add this line
+
 
     def resize(self, width, height):
         """Passt die Spielanzeige an die neue Fenstergröße an."""
@@ -46,6 +53,8 @@ class Gameplay(State):
         self.player_count = self.persist.get('player_count', 1)
         self.current_player = 0
         self.assets = self.persist.get('assets', GameAssets())
+        self.player_names = self.persist.get('player_names', [])  # Add this line
+        print(f"Debug: Player names retrieved from persistent: {self.player_names}")  # Debug print
         self.GameStart()
 
     def GameStart(self):
@@ -74,7 +83,7 @@ class Gameplay(State):
                 if card_sum > highest_sum:
                     highest_sum = card_sum
                     starting_player = i
-
+        self.draw(self.screen)
         self.current_player = starting_player
 
         # Zeige den Startspieler für 5 Sekunden an
@@ -117,7 +126,6 @@ class Gameplay(State):
         elif self.is_over_stack(mouse_pos):
             self.handle_stack_click()
         else:
-            # Verarbeitet Mausereignisse und wählt Karten basierend auf der Position.
             if self.selected_stack_card:
                 selected_card_index = self.get_card_at_pos(self.current_player, mouse_pos)
 
@@ -130,7 +138,7 @@ class Gameplay(State):
 
                     # Überprüfen, ob das Spiel vorbei ist oder der Zug endet
                     if self.check_all_cards_visible(self.current_player):
-                        self.round_over() #change here fome game over to round over
+                        self.start_last_turn()  # Letzter Zug starten, wenn alle Karten sichtbar sind
                     else:
                         self.end_turn()
 
@@ -148,7 +156,7 @@ class Gameplay(State):
 
                     # Überprüfen, ob das Spiel vorbei ist oder der Zug endet
                     if self.check_all_cards_visible(self.current_player):
-                        self.round_over() #change here fome game over to round over
+                        self.start_last_turn()  # Letzter Zug starten, wenn alle Karten sichtbar sind
                     else:
                         self.end_turn()
 
@@ -171,7 +179,10 @@ class Gameplay(State):
     def handle_deck_click(self):
         """Legt die oberste Karte des Decks auf den Stack und erlaubt dann eine Aktion."""
         if not self.deck_action_taken:
-            self.deck.draw(self.stack)
+            top_card = self.deck.draw(self.stack)  # Ziehe die oberste Karte vom Deck
+            if top_card:
+                top_card.visible = True  # Setze die Karte auf sichtbar
+                self.stack.add_card(top_card)  # Lege sie auf den Stack
             self.deck_action_taken = True  # Markiere die Deck-Aktion als durchgeführt
 
     def handle_stack_click(self):
@@ -241,14 +252,11 @@ class Gameplay(State):
 
         for row in range(rows):
             for col in range(cols):
-                if player_index == 0 or player_index == 2:  # Spieler unten oder oben
+                if player_index == 0 or player_index == 1 or player_index == 2 or player_index == 3:  # Spieler unten oder oben
                     x = start_x + col * (card_width + card_gap)
                     y = start_y + row * (card_height + card_gap)
                     card_rect = pygame.Rect(x, y, card_width, card_height)
-                else:  # Spieler links oder rechts
-                    x = start_x + row * (card_height + card_gap)
-                    y = start_y + col * (card_width + card_gap)
-                    card_rect = pygame.Rect(x, y, card_height, card_width)  # Vertausche Breite und Höhe
+
 
                 if card_rect.collidepoint(pos):
                     return row * cols + col
@@ -271,8 +279,31 @@ class Gameplay(State):
         stack_rect = pygame.Rect(x, y, card_width, card_height)
         return stack_rect.collidepoint(pos)
 
+
+    def start_last_turn(self):
+        """Aktiviert den letzten Zug für alle Spieler."""
+        if not self.last_turn_active:
+            self.last_turn_active = True
+            self.last_turn_player = self.current_player  # Speichere den Spieler, der als erstes fertig war
+            self.turn_counter = 0  # Zählt, wie viele Spieler bereits ihren letzten Zug gemacht haben
+            print(f"Spieler {self.last_turn_player + 1} hat alle Karten umgedreht. Letzte Runde beginnt!")
+
+        self.end_turn()  # Setze den Zug fort
+
     def end_turn(self):
-        """Wechselt zum nächsten Spieler."""
+        """Wechselt zum nächsten Spieler und überprüft, ob die Runde endet."""
+        if self.last_turn_active:
+            # Erhöhe den Zähler, wenn alle Spieler noch einmal an der Reihe waren
+            self.turn_counter += 1
+            print(f"Spieler {self.current_player + 1} hat seinen letzten Zug gemacht.")
+
+            # Wenn alle Spieler einschließlich des Startspielers des letzten Zuges dran waren
+            if self.turn_counter >= self.player_count:
+                print("Letzter Zug abgeschlossen. Runde endet.")
+                self.round_over()  # Runde beenden
+                return
+
+        # Zum nächsten Spieler wechseln
         self.current_player = (self.current_player + 1) % self.player_count
         self.stack_clicked = False
         self.deck_clicked = False
@@ -280,12 +311,14 @@ class Gameplay(State):
 
     def check_all_cards_visible(self, player_index):
         """Überprüft, ob alle Karten des aktuellen Spielers aufgedeckt sind."""
-        for card in self.players_hands[player_index]:
-            if not card.visible:
-                return False
-        return True
+        all_visible = all(card.visible for card in self.players_hands[player_index])
 
+        if all_visible and self.first_to_finish is None:
+            # Speichere den ersten Spieler, der alle Karten umgedreht hat
+            self.first_to_finish = player_index + 1  # +1 um den Spieler 1-basiert anzugeben
+            self.persist['first_to_finish'] = self.first_to_finish  # Speichere dies in self.persist
 
+        return all_visible
 
     def draw(self, surface):
         """Zeichnet das Spielfeld, den Stapel, das Deck und die Karten der Spieler."""
@@ -299,19 +332,6 @@ class Gameplay(State):
         self.draw_player_score()
         pygame.display.flip()
 
-    def display_current_player(self, surface):
-        """Zeigt den aktuellen Spieler an."""
-        text = self.font.render(f"Player {self.current_player + 1}'s turn", True, pygame.Color("white"))
-        surface.blit(text, (10, 10))
-
-    def draw_deck(self):
-        """Zeichnet das Deck auf den Bildschirm."""
-        card_width, card_height, card_gap = self.get_card_measurements()
-        x = self.screen.get_width() / 2 - (card_width + card_gap / 2)
-        y = self.screen.get_height() / 2 - card_height / 2
-
-        card_surface = pygame.transform.scale(self.assets.CardBack, (int(card_width), int(card_height)))
-        self.screen.blit(card_surface, (x, y))
 
     def draw_stack(self):
         """Zeichnet den Stapel auf den Bildschirm."""
@@ -324,6 +344,15 @@ class Gameplay(State):
             card_image = card.get_image()
             card_surface = pygame.transform.scale(card_image, (int(card_width), int(card_height)))
             self.screen.blit(card_surface, (x, y))
+
+    def draw_deck(self):
+        """Zeichnet das Deck auf den Bildschirm."""
+        card_width, card_height, card_gap = self.get_card_measurements()
+        x = self.screen.get_width() / 2 - (card_width + card_gap / 2)
+        y = self.screen.get_height() / 2 - card_height / 2
+
+        card_surface = pygame.transform.scale(self.assets.CardBack, (int(card_width), int(card_height)))
+        self.screen.blit(card_surface, (x, y))
 
     def draw_player_hand(self, player_index):
         """Zeichnet die Kartenhand des Spielers auf den Bildschirm."""
@@ -339,7 +368,7 @@ class Gameplay(State):
         elif player_index == 1:
             start_x = card_gap
             start_y = self.screen.get_height() / 2 - (cols / 2) * (card_width + card_gap) + card_gap
-            rotation_angle = 90
+            rotation_angle = 0  # Gleiche Ausrichtung wie Spieler 0
         elif player_index == 2:
             start_x = self.screen.get_width() / 2 - (cols / 2) * (card_width + card_gap)
             start_y = card_gap
@@ -347,7 +376,7 @@ class Gameplay(State):
         elif player_index == 3:
             start_x = self.screen.get_width() - rows * (card_height + card_gap)
             start_y = self.screen.get_height() / 2 - (cols / 2) * (card_width + card_gap)
-            rotation_angle = 270
+            rotation_angle = 0  # Gleiche Ausrichtung wie Spieler 0
 
         for row in range(rows):
             for col in range(cols):
@@ -357,12 +386,10 @@ class Gameplay(State):
                 if card.elim:
                     continue  # Überspringt die eliminierte Karte
 
-                if player_index == 0 or player_index == 2:
+                if player_index == 0 or player_index == 1 or player_index == 2 or player_index == 3:
                     x = start_x + col * (card_width + card_gap)
                     y = start_y + row * (card_height + card_gap)
-                else:
-                    x = start_x + row * (card_height + card_gap)
-                    y = start_y + col * (card_width + card_gap)
+
 
                 card_image = card.get_image()
 
@@ -395,14 +422,12 @@ class Gameplay(State):
                         0 <= index2 < len(hand) and
                         0 <= index3 < len(hand)):
 
-
                     card1 = hand[index1]
                     card2 = hand[index2]
                     card3 = hand[index3]
 
-                    if card1.value == card2.value == card3.value and card1.value > 0 and card1.visible and card2.visible and card3.visible:
+                    if card1.value == card2.value == card3.value and -2 <= card1.value and card1.visible and card2.visible and card3.visible:
                         remove_three_in_a_row([card1, card2, card3])
-
 
     def Calculate_player_score(self, player_index):
         """Berechnet die Punktzahl eines Spielers basierend auf den offenen Karten."""
@@ -416,30 +441,37 @@ class Gameplay(State):
         """Zeigt dauerhaft die Punktzahl aller Spieler rechts neben der Spielerhand an."""
         for i in range(self.player_count):
             player_score = self.Calculate_player_score(i)
+            player_name = self.player_names[i] if i < len(self.player_names) else f"Player {i + 1}"
 
-            # Render the text for the score
-            text = self.font.render(f"Score: {player_score}", True, pygame.Color("white"))
+            # Render the text for the score and name
+            score_text = self.font.render(f"Score: {player_score}", True, pygame.Color("white"))
+            name_text = self.font.render(player_name, True, pygame.Color("yellow"))
 
             # Berechne die Position des Textes nahe der Spielerhand
             if i == 0:  # Spieler unten
                 x = self.screen.get_width() / 2 + 2 * (self.card_width + self.card_gap)
-                y = self.screen.get_height() - 3 * (self.card_height + self.card_gap)
-                rotated_text = text  # Keine Rotation erforderlich
+                y = self.screen.get_height() - 2 * (self.card_height + self.card_gap)
+                rotated_score_text = score_text
+                rotated_name_text = name_text
             elif i == 1:  # Spieler links
-                x = self.card_height * 3 - 5 * self.card_gap
-                y = self.screen.get_height() / 2 + 2 * (self.card_width + self.card_gap) + self.card_gap
-                rotated_text = pygame.transform.rotate(text, 270)  # Schrift um 90 Grad drehen
+                x = self.card_width * 1 + 5 * self.card_gap
+                y = self.screen.get_height() / 2 - 3 * (self.card_width + self.card_gap) + self.card_gap
+                rotated_score_text = score_text
+                rotated_name_text = name_text
             elif i == 2:  # Spieler oben
                 x = self.screen.get_width() / 2 + 2 * (self.card_width + self.card_gap)
-                y = 3 * self.card_height - 5 * self.card_gap
-                rotated_text = pygame.transform.rotate(text, 180)  # Schrift um 180 Grad drehen
+                y = 2 * self.card_height
+                rotated_score_text = score_text
+                rotated_name_text = name_text
             elif i == 3:  # Spieler rechts
                 x = self.screen.get_width() - 3 * (self.card_height + self.card_gap)
-                y = self.screen.get_height() / 2 - 4 * (self.card_width + self.card_gap) - 2 * self.card_gap
-                rotated_text = pygame.transform.rotate(text, 90)  # Schrift um 270 Grad drehen (oder -90 Grad)
+                y = self.screen.get_height() / 2 - 3 * (self.card_width + self.card_gap) + self.card_gap
+                rotated_score_text = score_text
+                rotated_name_text = name_text
 
-            self.screen.blit(rotated_text, (x, y))
-
+            # Draw name above the score
+            self.screen.blit(rotated_name_text, (x, y - 30))  # Adjust y position for name
+            self.screen.blit(rotated_score_text, (x, y))
     def round_over(self):
         """Wechselt den Spielzustand zu 'Round Summary' und berechnet die Punkte."""
         # 1. Aufdecken aller noch nicht aufgedeckten Karten aller Spieler
@@ -459,12 +491,10 @@ class Gameplay(State):
             current_round_score.append(score)
 
         self.persist['current_round_score'] = current_round_score
+        # Prüfen, ob wir den ersten Spieler gespeichert haben
+        if self.first_to_finish is not None:
+            print(f"Player {self.first_to_finish} was the first to flip all their cards!")
+
         self.next_state = "SCOREBOARD"
         self.done = True
 
-    def game_over(self):
-        """Handles the game over logic."""
-        print("Game Over!")
-        # Add any additional game over logic here, such as transitioning to a game over screen or resetting the game state.
-        self.done = True
-        self.next_state = "GAME_OVER"  # Example of transitioning to a game over state
