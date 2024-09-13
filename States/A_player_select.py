@@ -11,18 +11,13 @@ class A_PlayerSelect(State):
         self.selected_players = [True, False, False, False]  # Mensch ist aktiv, Rest sind Gegner
         self.bot_difficulties = ["Medium"] * 4  # Startschwierigkeit für die Bots (1 Mensch + 3 Bots)
         self.bot_names = self.generate_random_bot_names()
-        self.bot_icons = [
-            "C:/DataX - Lilly2/Grafiken/Bot_1.png",
-            "C:/DataX - Lilly2/Grafiken/Bot_2.png",
-            "C:/DataX - Lilly2/Grafiken/Bot_3.png"
-        ]
         self.next_state = "GAMEPLAY_AUTOMATED"
         self.font = pygame.font.Font(None, 50)
         self.button_font = pygame.font.Font(None, 40)
 
         # Initialisiere screen_rect und lade Hintergrund
         self.screen_rect = pygame.display.get_surface().get_rect()
-        self.background = pygame.image.load("C:/DataX - Lilly2/Grafiken/Background.jpg")  # Pfad zum Hintergrundbild
+
 
         # Initialisiere die Positionen für die Icons und Buttons
         self.icon_size = 100  # Größe der Icons
@@ -137,7 +132,7 @@ class A_PlayerSelect(State):
 
     def draw(self, surface):
         # Skaliere das Hintergrundbild, damit es weniger herangezoomt ist
-        scaled_background = pygame.transform.scale(self.background, (self.screen_rect.width, self.screen_rect.height))
+        scaled_background = pygame.transform.scale(self.assets.background, (self.screen_rect.width, self.screen_rect.height))
         surface.blit(scaled_background, (0, 0))  # Zeichne den skalierten Hintergrund
 
         # Zeichne Icons und Namen
@@ -145,9 +140,9 @@ class A_PlayerSelect(State):
             # Icon für Spieler oder Bot
             icon_rect = pygame.Rect(x, y, self.icon_size, self.icon_size)
             if i == 0:
-                icon_image = pygame.image.load("C:/DataX - Lilly2/Grafiken/Player.png")
+                icon_image = self.assets.Player
             else:
-                icon_image = pygame.image.load(self.bot_icons[i - 1])  # Lade spezifisches Bot-Icon
+                icon_image = self.assets.bot_icons[i - 1]  # Lade spezifisches Bot-Icon
             surface.blit(icon_image, icon_rect)
 
             # Hervorhebung der ausgewählten Bots

@@ -20,7 +20,7 @@ class Options(State):
         self.button_font = pygame.font.Font(None, 40)
         self.button_text = self.button_font.render("Main Menu", True, pygame.Color("white"))
         self.button_rect = self.button_text.get_rect(topleft=(10, self.screen_rect.height - self.button_text.get_height() - 30))
-        self.background = pygame.image.load("C:/DataX - Lilly2/Grafiken/Background.jpg")  # Pfad zum Hintergrundbild
+
 
     def get_event(self, event):
         if event.type == pygame.QUIT:
@@ -45,7 +45,7 @@ class Options(State):
 
     def draw(self, surface):
         # Skaliere das Hintergrundbild
-        scaled_background = pygame.transform.scale(self.background, (self.screen_rect.width, self.screen_rect.height))
+        scaled_background = pygame.transform.scale(self.assets.background, (self.screen_rect.width, self.screen_rect.height))
         surface.blit(scaled_background, (0, 0))  # Zeichne den skalierten Hintergrund
 
         self.music_slider.draw(surface)

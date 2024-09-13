@@ -15,6 +15,7 @@ def load_sound(filename):
 class GameAssets:
     def __init__(self):
         # Initialisiere den Mixer
+        self.bot_icons = None
         pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=4096)
         pygame.mixer.music.load(os.path.join("Sounds", "main-menu.mp3"))
 
@@ -53,6 +54,12 @@ class GameAssets:
         self.Bot2 = load_image("Bot_2.png")
         self.Bot3 = load_image("Bot_3.png")
         self.Player = load_image("Player.png")
+
+        self.bot_icons = [
+            load_image("Bot_1.png"),
+            load_image("Bot_2.png"),
+            load_image("Bot_3.png")
+        ]
 
         # Laden der Sounds
         self.card_turn_sfx = load_sound("flipcard.mp3")

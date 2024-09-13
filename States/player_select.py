@@ -19,7 +19,6 @@ class PlayerSelect(State):
 
         # Initialisiere screen_rect und lade Hintergrund
         self.screen_rect = pygame.display.get_surface().get_rect()
-        self.background = pygame.image.load("C:/DataX - Lilly2/Grafiken/Background.jpg")  # Pfad zum Hintergrundbild
 
         # Initialisiere die Positionen für die Icons und Buttons
         self.icon_size = 100  # Größe der Icons
@@ -106,14 +105,14 @@ class PlayerSelect(State):
 
     def draw(self, surface):
         # Skaliere das Hintergrundbild
-        scaled_background = pygame.transform.scale(self.background, (self.screen_rect.width, self.screen_rect.height))
+        scaled_background = pygame.transform.scale(self.assets.background, (self.screen_rect.width, self.screen_rect.height))
         surface.blit(scaled_background, (0, 0))  # Zeichne den skalierten Hintergrund
 
         # Zeichne Icons und Namen der Spieler
         for i, (x, y) in enumerate(self.icon_positions):
             # Icon für Spieler
             icon_rect = pygame.Rect(x, y, self.icon_size, self.icon_size)
-            icon_image = pygame.image.load("C:/DataX - Lilly2/Grafiken/Player.png")
+            icon_image = self.assets.Player
             surface.blit(icon_image, icon_rect)
 
             # Hervorhebung der aktiven Spieler

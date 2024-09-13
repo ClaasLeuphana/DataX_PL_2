@@ -20,7 +20,7 @@ class Gamemode(State):
 
         # Initiale Positionen der Textelemente setzen
         self.update_text_positions()
-        self.background = pygame.image.load("C:/DataX - Lilly2/Grafiken/Background.jpg")  # Pfad zum Hintergrundbild
+
 
     def render_text(self, index):
         color = pygame.Color("red") if index == self.active_index else pygame.Color("white")
@@ -64,7 +64,7 @@ class Gamemode(State):
 
     def draw(self, surface):
         # Skaliere das Hintergrundbild
-        scaled_background = pygame.transform.scale(self.background, (self.screen_rect.width, self.screen_rect.height))
+        scaled_background = pygame.transform.scale(self.assets.background, (self.screen_rect.width, self.screen_rect.height))
         surface.blit(scaled_background, (0, 0))  # Zeichne den skalierten Hintergrund
 
         # Zeichne die Menüoptionen
