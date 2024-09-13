@@ -25,6 +25,7 @@ class Gameplay(State):
         self.screen_rect = self.screen.get_rect()
         self.card_width, self.card_height, self.card_gap = self.get_card_measurements()
         self.selected_stack_card = None
+        self.player_names = []
 
     def resize(self, width, height):
         """Passt die Spielanzeige an die neue Fenstergröße an."""
@@ -62,6 +63,7 @@ class Gameplay(State):
 
         self.cards_turned = 0
         self.initial_round = True  # Setzt die Anfangsrunde
+
     def determine_starting_player(self):
         """Bestimmt den Spieler, der beginnt, basierend auf der höchsten Summe der ersten zwei aufgedeckten Karten."""
         highest_sum = -1
@@ -79,6 +81,7 @@ class Gameplay(State):
 
         # Zeige den Startspieler für 5 Sekunden an
         self.show_starting_player_message(starting_player + 1)
+
     def show_starting_player_message(self, player_number):
         """Zeigt eine Nachricht an, welcher Spieler beginnt, und wartet 5 Sekunden."""
         message = f"Spieler {player_number} beginnt!"
@@ -165,7 +168,8 @@ class Gameplay(State):
                     self.end_turn()
                     self.cards_turned = 0  # Setzt die Anzahl aufgedeckter Karten für den nächsten Spieler zurück
                     if self.current_player == 0:  # Nach der letzten Runde des letzten Spielers
-                        self.initial_round = False  # Schaltet in die reguläre Spielrunde um
+                        self.initial_round = False
+                        self.draw(self.screen)
                         self.determine_starting_player()  # Jetzt den Startspieler bestimmen
 
     def handle_deck_click(self):
@@ -285,8 +289,6 @@ class Gameplay(State):
                 return False
         return True
 
-
-
     def draw(self, surface):
         """Zeichnet das Spielfeld, den Stapel, das Deck und die Karten der Spieler."""
         surface.fill(pygame.Color("blue"))
@@ -402,7 +404,6 @@ class Gameplay(State):
 
                     if card1.value == card2.value == card3.value and card1.value > 0 and card1.visible and card2.visible and card3.visible:
                         remove_three_in_a_row([card1, card2, card3])
-
 
     def Calculate_player_score(self, player_index):
         """Berechnet die Punktzahl eines Spielers basierend auf den offenen Karten."""

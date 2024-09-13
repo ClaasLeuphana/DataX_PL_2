@@ -38,6 +38,7 @@ class A_Scoreboard(State):
             if self.current_round_score[first_to_finish - 1] != min_score:
                 # 3. Verdopple die Punkte des Spielers, wenn er nicht die niedrigste Punktzahl hat
                 self.current_round_score[first_to_finish - 1] *= 2
+        self.persist['first_to_finish'] = None
 
 
         # Aktualisiere die total_scores basierend auf den aktuellen Rundenscores

@@ -29,10 +29,10 @@ class Gameplay_Automated(State):
         self.first_to_finish = None
         self.stack= Stack()
         self.deck= Deck(assets=self.assets)
-        self.last_turn_active = False
+        self.last_turn_active = None
         self.last_turn_player = None
         self.turn_counter = 0
-        self.player_names = []  # Add this line
+        self.player_names = []
 
     def resize(self, width, height):
         """Passt die Spielanzeige an die neue Fenstergröße an."""
@@ -49,6 +49,7 @@ class Gameplay_Automated(State):
 
     def startup(self, persistent):
         self.persist = persistent
+        self.last_turn_active = False
         self.player_count = self.persist.get('player_count', 1)
         self.current_player = 0
         self.assets = self.persist.get('assets', GameAssets())
@@ -137,7 +138,6 @@ class Gameplay_Automated(State):
                             self.determine_starting_player()
         elif self.current_player != 0:
             self.automated_initial_turn()
-
 
     def gameLogic(self, event):
         """Zentraler Ablauf der Spiellogik ruft die einzelnen Schritte auf."""
