@@ -1,19 +1,31 @@
 import pygame
 from States.base import State
 
-
 class Scoreboard(State):
     def __init__(self, assets=None):
+        """
+        Initialisiert das Scoreboard für die Anzeige von Spielergebnissen und Optionen.
+
+        Input:
+        - assets: Ein Objekt, das die benötigten Grafiken und Sounds bereitstellt (optional).
+
+        """
         super(Scoreboard, self).__init__()
         self.assets = assets
         self.font = pygame.font.Font(None, 50)
         self.round = 1
-        self.options = ["New Round", "Quit Game"]  # Optionen für den Benutzer
-        self.active_index = 0  # Verfolgt die ausgewählte Option
+        self.options = ["New Round", "Quit Game"]
+        self.active_index = 0
         self.screen_rect = None
 
-
     def startup(self, persistent):
+        """
+        Initialisiert den Scoreboard-Zustand basierend auf den persistierenden Daten.
+
+        Input:
+        - persistent: Ein Dictionary, das die aktuellen Statusinformationen des Spiels enthält.
+
+        """
         self.persist = persistent
         self.round_scores = self.persist.get('round_scores', [])
         self.player_count = self.persist.get('player_count', 1)
@@ -31,7 +43,6 @@ class Scoreboard(State):
             if self.current_round_score[first_to_finish - 1] != min_score:
                 self.current_round_score[first_to_finish - 1] *= 2
 
-
         self.round_scores.append(self.current_round_score)
         for i in range(self.player_count):
             self.total_scores[i] += self.current_round_score[i]
@@ -41,16 +52,25 @@ class Scoreboard(State):
 
         self.check_game_over()
 
-
     def check_game_over(self):
-        """Überprüft, ob einer der Spieler 100 oder mehr Punkte hat."""
+        """
+        Überprüft, ob ein Spieler 100 oder mehr Punkte erreicht hat und wechselt gegebenenfalls in den Game Over-Zustand.
+
+        """
         for score in self.total_scores:
             if score >= 100:
-                self.next_state = "GAMEOVER"  # Wechsle zum Game Over State
+                self.next_state = "GAMEOVER"
                 self.done = True
-                break  # Beende die Überprüfung, sobald ein Spieler 100 erreicht
+                break
 
     def get_event(self, event):
+        """
+        Verarbeitet Eingabeereignisse wie Tastendruck und Mausklicks.
+
+        Input:
+        - event: Das Pygame-Ereignis, das verarbeitet werden soll.
+
+        """
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 self.handle_action()
@@ -64,31 +84,36 @@ class Scoreboard(State):
                     self.handle_action()
 
     def handle_action(self):
+        """
+        Führt eine Aktion basierend auf der aktuell ausgewählten Option aus.
+
+        """
         if self.active_index == 0:  # Neue Runde
-            self.persist['current_round_score'] = [0] * self.player_count  # Setze die Rundenscores zurück
+            self.persist['current_round_score'] = [0] * self.player_count
             self.next_state = "GAMEPLAY"
             self.done = True
         elif self.active_index == 1:  # Spiel Beenden
             self.quit = True
 
     def draw(self, screen):
-        """Zeichnet das Scoreboard und die Optionen."""
+        """
+        Zeichnet das Scoreboard und die Optionen auf der angegebenen Oberfläche.
 
-       # Hintergrund von Hintergrundbild von GameAssets
+        Input:
+        - screen: Die Oberfläche, auf der das Scoreboard gezeichnet werden soll.
+
+        """
         background_scaled = pygame.transform.scale(self.assets.background, (self.screen_rect.width, self.screen_rect.height))
         screen.blit(background_scaled, (0, 0))
 
-        # Zeichne die Überschrift Scoreboard
         header_text = self.font.render("Scoreboard", True, pygame.Color("white"))
         screen.blit(header_text, (self.screen_rect.centerx - header_text.get_width() // 2, 50))
 
-        # Definiere die Positionen und Abstände für die Tabelle
         x_offset = 50
         y_offset = 150
         row_height = 60
         column_width = 200
 
-        # Zeichne die Tabellenüberschrift
         header_text = self.font.render("Round", True, pygame.Color("white"))
         screen.blit(header_text, (x_offset, y_offset))
 
@@ -96,7 +121,6 @@ class Scoreboard(State):
             player_header_text = self.font.render(self.player_names[i], True, pygame.Color("white"))
             screen.blit(player_header_text, (x_offset + (i + 1) * column_width, y_offset))
 
-        # Zeichne die Rundenscores und Gesamtpunkte
         for j, scores in enumerate(self.round_scores):
             round_text = self.font.render(f"Round {j + 1}", True, pygame.Color("white"))
             screen.blit(round_text, (x_offset, y_offset + (j + 1) * row_height))
@@ -105,7 +129,6 @@ class Scoreboard(State):
                 score_text = self.font.render(str(scores[i]), True, pygame.Color("white"))
                 screen.blit(score_text, (x_offset + (i + 1) * column_width, y_offset + (j + 1) * row_height))
 
-        # Zeichne die Gesamtsumme in der letzten Zeile
         total_text = self.font.render("Total", True, pygame.Color("white"))
         screen.blit(total_text, (x_offset, y_offset + (len(self.round_scores) + 1) * row_height))
 
@@ -113,25 +136,48 @@ class Scoreboard(State):
             total_score_text = self.font.render(str(self.total_scores[i]), True, pygame.Color("white"))
             screen.blit(total_score_text, (x_offset + (i + 1) * column_width, y_offset + (len(self.round_scores) + 1) * row_height))
 
-        # Zeichne klickbare Optionen
         for index, option in enumerate(self.options):
             text_render = self.render_text(index)
             screen.blit(text_render, self.get_text_position(text_render, index))
 
     def render_text(self, index):
+        """
+        Rendert den Text für eine bestimmte Option und färbt den Text abhängig davon, ob die Option aktiv ist oder nicht.
+
+        Input:
+        - index: Der Index der Option, die gerendert werden soll.
+
+        Output:
+        - Der gerenderte Text als Pygame-Text-Objekt.
+        """
         color = pygame.Color("red") if index == self.active_index else pygame.Color("white")
         return self.font.render(self.options[index], True, color)
 
     def get_text_position(self, text, index):
-        # Positioniere die Optionen auf dem Bildschirm
-        if index == 0:  # "Neue Runde" in der rechten unteren Ecke
+        """
+        Bestimmt die Position auf dem Bildschirm, an der der Text für eine Option angezeigt werden soll.
+
+        Input:
+        - text: Der gerenderte Text als Pygame-Text-Objekt.
+        - index: Der Index der Option, deren Position bestimmt werden soll.
+
+        Output:
+        - Das Pygame-Rechteck, das die Position des Textes definiert.
+        """
+        if index == 0:  # "New Round" in der rechten unteren Ecke
             position = (self.screen_rect.width - text.get_width() - 50, self.screen_rect.height - text.get_height() - 50)
-        elif index == 1:  # "Spiel Beenden" in der linken unteren Ecke
+        elif index == 1:  # "Quit Game" in der linken unteren Ecke
             position = (50, self.screen_rect.height - text.get_height() - 50)
         return text.get_rect(topleft=position)
 
     def update(self, dt):
-        # Aktualisiere den aktiven Index basierend auf Maus-Hover
+        """
+        Aktualisiert den aktiven Index basierend auf der Mausposition und überprüft, ob das Spiel vorbei ist.
+
+        Input:
+        - dt: Die verstrichene Zeit seit dem letzten Update (kann zur Animation verwendet werden).
+
+        """
         mouse_pos = pygame.mouse.get_pos()
         for index, option in enumerate(self.options):
             text_render = self.render_text(index)
@@ -139,17 +185,34 @@ class Scoreboard(State):
             if text_rect.collidepoint(mouse_pos):
                 self.active_index = index
 
-        # Überprüfe erneut, ob das Spiel vorbei ist
         self.check_game_over()
 
     def cleanup(self):
+        """
+        Gibt die aktuellen persistierenden Daten vor dem Wechsel des Zustands zurück.
+
+        Output:
+        - Das persistierende Daten-Dictionary.
+        """
         return self.persist
 
     def resize(self, width, height):
+        """
+        Passt die Bildschirmgröße an und aktualisiert die Positionen der Text-Optionen.
+
+        Input:
+        - width: Die neue Breite des Bildschirms.
+        - height: Die neue Höhe des Bildschirms.
+
+        """
         self.screen_rect = pygame.Rect(0, 0, width, height)
         self.update_text_positions()
 
     def update_text_positions(self):
+        """
+        Aktualisiert die Positionen der Text-Optionen basierend auf der aktuellen Bildschirmgröße.
+
+        """
         self.text_positions = []
         for index in range(len(self.options)):
             text_render = self.render_text(index)

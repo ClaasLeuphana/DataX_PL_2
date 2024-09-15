@@ -3,6 +3,21 @@ from States.base import State
 
 class GameOver(State):
     def __init__(self, assets=None):
+        """
+        Initialisiert den GameOver-Zustand.
+
+        Parameter:
+        - assets: Die verfügbaren Assets, wie z.B. Hintergrundbilder
+
+        Eigenschaften:
+        - font: Schriftart für die Menüoptionen
+        - round: Runde des Spiels
+        - options: Optionen für das Menü
+        - active_index: Index der aktuell ausgewählten Option
+        - screen_rect: Rechteck, das die Bildschirmgröße beschreibt
+        - font_large: Große Schriftart für "Game Over"
+        - font_small: Kleinere Schriftart für Details
+        """
         super(GameOver, self).__init__()
         self.assets = assets
         self.font = pygame.font.Font(None, 50)
@@ -14,6 +29,19 @@ class GameOver(State):
         self.font_small = pygame.font.Font(None, 50)  # Kleinere Schriftart für Details
 
     def startup(self, persistent):
+        """
+        Initialisiert den GameOver-Zustand mit persistenten Daten.
+
+        Parameter:
+        - persistent: Ein Dictionary, das persistente Daten wie Scores enthält
+
+        Aktionen:
+        - Lädt die gespeicherten Runden-Scores, Spieleranzahl, Gesamt-Scores und Spielernamen
+        - Bestimmt den Gewinner
+        - Initialisiert screen_rect basierend auf der Bildschirmgröße
+        - Fügt die aktuelle Runde zu den Rundenscores hinzu, falls noch nicht vorhanden
+        - Speichert die aktualisierten Scores zurück in persistent
+        """
         self.persist = persistent
         self.round_scores = self.persist.get('round_scores', [])
         self.player_count = self.persist.get('player_count', 1)
@@ -37,7 +65,12 @@ class GameOver(State):
         self.persist['total_scores'] = self.total_scores
 
     def get_winner(self):
-        """Findet den Spieler mit der niedrigsten Punktzahl (Gewinner)."""
+        """
+        Bestimmt den Spieler mit der niedrigsten Punktzahl (Gewinner).
+
+        Rückgabewert:
+        - Der Index des Gewinners (0-basierter Index) oder None, falls kein Gewinner bestimmt werden konnte
+        """
         if self.total_scores:
             min_score = min(self.total_scores)
             winner_index = self.total_scores.index(min_score)  # Hole den Index der niedrigsten Punktzahl
@@ -45,6 +78,15 @@ class GameOver(State):
         return None
 
     def get_event(self, event):
+        """
+        Verarbeitet Ereignisse wie Tasteneingaben und Mausklicks.
+
+        Parameter:
+        - event: Das Ereignis, das verarbeitet werden soll
+
+        Aktionen:
+        - Handhabt Tasteneingaben (Enter-Taste) und Mausklicks auf Menüoptionen
+        """
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 self.handle_action()
@@ -58,13 +100,27 @@ class GameOver(State):
                     self.handle_action()
 
     def reset_scores(self):
-        """Setzt alle Punktzahlen und Runden für ein neues Spiel zurück."""
+        """
+        Setzt alle Punktzahlen und Runden für ein neues Spiel zurück.
+
+        Aktionen:
+        - Leert die Rundenscores
+        - Setzt die Gesamt-Scores und die Punktzahlen der aktuellen Runde zurück
+        - Setzt die Runde auf 1
+        """
         self.persist['round_scores'] = []
         self.persist['total_scores'] = [0] * self.player_count
         self.persist['current_round_score'] = [0] * self.player_count
         self.round = 1
 
     def handle_action(self):
+        """
+        Handhabt die Aktion basierend auf der aktuell ausgewählten Menüoption.
+
+        Aktionen:
+        - Setzt beim Auswahlindex 0 die Scores zurück und wechselt zum "PLAYER_SELECT"-Zustand
+        - Beendet das Spiel beim Auswahlindex 1
+        """
         if self.active_index == 0:  # Neues Spiel
             self.reset_scores()  # Alle vorherigen Ergebnisse löschen
             self.next_state = "PLAYER_SELECT"
@@ -73,8 +129,19 @@ class GameOver(State):
             self.quit = True
 
     def draw(self, screen):
-        """Zeichnet das Scoreboard und die Optionen."""
+        """
+        Zeichnet das Scoreboard und die Optionen auf dem Bildschirm.
 
+        Parameter:
+        - screen: Die Pygame-Oberfläche, auf der gezeichnet wird
+
+        Aktionen:
+        - Zeichnet den Hintergrund
+        - Zeichnet die Überschrift "Scoreboard"
+        - Zeichnet die Rundenscores und Gesamtpunkte
+        - Zeichnet den "Game Over"-Text und den Gewinner-Text
+        - Zeichnet klickbare Menüoptionen
+        """
         # Hintergrund von Hintergrundbild von GameAssets
         background_scaled = pygame.transform.scale(self.assets.background, (self.screen_rect.width, self.screen_rect.height))
         screen.blit(background_scaled, (0, 0))
@@ -136,19 +203,45 @@ class GameOver(State):
             screen.blit(text_render, self.get_text_position(text_render, index))
 
     def render_text(self, index):
+        """
+        Rendert den Text für eine Menüoption.
+
+        Parameter:
+        - index: Der Index der Option, die gerendert werden soll
+
+        Rückgabewert:
+        - Das gerenderte Text-Image
+        """
         color = pygame.Color("red") if index == self.active_index else pygame.Color("white")
         return self.font.render(self.options[index], True, color)
 
     def get_text_position(self, text, index):
-        # Positioniere die Optionen auf dem Bildschirm
-        if index == 0:  # "Neue Runde" in der rechten unteren Ecke
+        """
+        Berechnet die Position der Textelemente basierend auf der aktuellen Bildschirmgröße.
+
+        Parameter:
+        - text: Das gerenderte Text-Image
+        - index: Der Index der Option
+
+        Rückgabewert:
+        - Das Rechteck, das die Position des Textes beschreibt
+        """
+        if index == 0:  # "New Game" in der rechten unteren Ecke
             position = (self.screen_rect.width - text.get_width() - 50, self.screen_rect.height - text.get_height() - 50)
-        elif index == 1:  # "Spiel Beenden" in der linken unteren Ecke
+        elif index == 1:  # "Quit Game" in der linken unteren Ecke
             position = (50, self.screen_rect.height - text.get_height() - 50)
         return text.get_rect(topleft=position)
 
     def update(self, dt):
-        # Aktualisiere den aktiven Index basierend auf Maus-Hover
+        """
+        Aktualisiert den Zustand basierend auf der Mausposition.
+
+        Parameter:
+        - dt: Delta-Zeit seit dem letzten Update
+
+        Aktionen:
+        - Setzt active_index auf den Index der Menüoption, über der sich die Maus befindet
+        """
         mouse_pos = pygame.mouse.get_pos()
         for index, option in enumerate(self.options):
             text_render = self.render_text(index)
@@ -157,13 +250,36 @@ class GameOver(State):
                 self.active_index = index
 
     def cleanup(self):
+        """
+        Bereinigt Ressourcen und Daten vor einem Zustandswechsel.
+
+        Rückgabewert:
+        - Ein Dictionary, das die persistenten Daten enthält
+        """
         return self.persist
 
     def resize(self, width, height):
+        """
+        Passt den Bildschirm an eine neue Größe an.
+
+        Parameter:
+        - width: Neue Breite des Bildschirms
+        - height: Neue Höhe des Bildschirms
+
+        Aktionen:
+        - Aktualisiert screen_rect basierend auf der neuen Bildschirmgröße
+        - Aktualisiert die Positionen der Textelemente
+        """
         self.screen_rect = pygame.Rect(0, 0, width, height)
         self.update_text_positions()
 
     def update_text_positions(self):
+        """
+        Aktualisiert die Positionen der Menüoptionen basierend auf der aktuellen Bildschirmgröße.
+
+        Aktionen:
+        - Berechnet die Positionen der Text-Elemente und speichert sie in text_positions
+        """
         self.text_positions = []
         for index in range(len(self.options)):
             text_render = self.render_text(index)

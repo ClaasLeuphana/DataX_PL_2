@@ -1,16 +1,25 @@
-
 import time
 from States.base import State
 from GameAssets import *
 
-
 def remove_three_in_a_row(cards):
-    """Setzt elim der Karten auf True."""
+    """
+    Setzt das Attribut 'elim' aller angegebenen Karten auf True.
+
+    Input:
+    - cards: Eine Liste von Karten, deren 'elim'-Attribut gesetzt werden soll.
+    """
     for card in cards:
         card.elim = True
 
 class Gameplay_Automated(State):
     def __init__(self, assets=None):
+        """
+        Initialisiert eine Instanz der Gameplay_Automated-Klasse.
+
+        Input:
+        - assets: Optional, die Spiel-Assets, die in der Instanz verwendet werden sollen.
+        """
         super(Gameplay_Automated, self).__init__(assets=assets)
         self.assets = assets
         self.player_count = 1
@@ -27,27 +36,46 @@ class Gameplay_Automated(State):
         self.card_width, self.card_height, self.card_gap = self.get_card_measurements()
         self.selected_stack_card = None
         self.first_to_finish = None
-        self.stack= Stack()
-        self.deck= Deck(assets=self.assets)
+        self.stack = Stack()
+        self.deck = Deck(assets=self.assets)
         self.last_turn_active = None
         self.last_turn_player = None
         self.turn_counter = 0
         self.player_names = []
 
     def resize(self, width, height):
-        """Passt die Spielanzeige an die neue Fenstergröße an."""
+        """
+        Passt die Spielanzeige an die neue Fenstergröße an.
+
+        Input:
+        - width: Die neue Breite des Fensters.
+        - height: Die neue Höhe des Fensters.
+        """
         self.screen_rect = pygame.Rect(0, 0, width, height)
         self.screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
         self.card_width, self.card_height, self.card_gap = self.get_card_measurements()
 
     def get_card_measurements(self):
-        """Berechnet die Maße und Abstände der Karten basierend auf der Bildschirmgröße."""
+        """
+        Berechnet die Maße und Abstände der Karten basierend auf der Bildschirmgröße.
+
+        Output:
+        - card_width: Die Breite der Karten.
+        - card_height: Die Höhe der Karten.
+        - card_gap: Der Abstand zwischen den Karten.
+        """
         self.card_width = self.screen.get_width() / 25
         self.card_height = self.card_width * 1.5
         self.card_gap = self.card_width / 12
         return self.card_width, self.card_height, self.card_gap
 
     def startup(self, persistent):
+        """
+        Initialisiert den Zustand basierend auf den persistierten Daten und startet das Spiel.
+
+        Input:
+        - persistent: Ein Dictionary mit persistierten Daten.
+        """
         self.persist = persistent
         self.last_turn_active = False
         self.player_count = self.persist.get('player_count', 1)
@@ -55,12 +83,14 @@ class Gameplay_Automated(State):
         self.assets = self.persist.get('assets', GameAssets())
         self.bot_difficulties = self.persist.get('bot_difficulties', ["Medium"] * 4)
         self.player_names = [self.persist.get('player_name', 'Player 1')]
-        self.bot_names = self.persist.get('bot_names', [])  # Add this line to retrieve bot names
+        self.bot_names = self.persist.get('bot_names', [])
         print(f"Debug: Player names retrieved from persistent: {self.player_names}, Bot names retrieved from persistent: {self.bot_names}")
         self.GameStart()
 
     def GameStart(self):
-        """Bereitet alles für den Spielstart vor."""
+        """
+        Bereitet alles für den Spielstart vor, einschließlich des Kartendeals und des Decks.
+        """
         self.deck = Deck(assets=self.assets)
         self.stack = Stack()
         self.players_hands = self.deck.deal(self.player_count)
@@ -73,7 +103,9 @@ class Gameplay_Automated(State):
         self.initial_round = True
 
     def determine_starting_player(self):
-        """Bestimmt den Spieler, der beginnt, basierend auf der höchsten Summe der ersten zwei aufgedeckten Karten."""
+        """
+        Bestimmt den Spieler, der beginnt, basierend auf der höchsten Summe der ersten zwei aufgedeckten Karten.
+        """
         highest_sum = -1
         starting_player = 0
 
@@ -90,7 +122,12 @@ class Gameplay_Automated(State):
         self.show_starting_player_message(starting_player + 1)
 
     def show_starting_player_message(self, player_number):
-        """Zeigt eine Nachricht an, welcher Spieler beginnt, und wartet 5 Sekunden."""
+        """
+        Zeigt eine Nachricht an, welcher Spieler beginnt, und wartet 5 Sekunden.
+
+        Input:
+        - player_number: Die Nummer des Spielers, der beginnt.
+        """
         message = f"Spieler {player_number} beginnt!"
         text_surface = self.font.render(message, True, pygame.Color("yellow"))
         text_rect = text_surface.get_rect(center=self.screen_rect.center)
@@ -108,6 +145,12 @@ class Gameplay_Automated(State):
         pygame.time.wait(5000)
 
     def get_event(self, event=None):
+        """
+        Verarbeitet das aktuelle Ereignis basierend auf dem Spieler und dem Spielstatus.
+
+        Input:
+        - event: Das aktuelle Ereignis, das verarbeitet werden soll.
+        """
         if self.initial_round:
             if self.current_player == 0:
                 if event and event.type == pygame.MOUSEBUTTONDOWN:
@@ -122,6 +165,12 @@ class Gameplay_Automated(State):
                 self.automated_player_turn()
 
     def handle_initial_turn(self, event=None):
+        """
+        Behandelt den ersten Zug des aktuellen Spielers im Anfangszeitraum.
+
+        Input:
+        - event: Das aktuelle Ereignis, das verarbeitet werden soll.
+        """
         if self.current_player == 0 and event is not None:
             mouse_pos = event.pos
             selected_card = self.get_card_at_pos(self.current_player, mouse_pos)
@@ -140,7 +189,12 @@ class Gameplay_Automated(State):
             self.automated_initial_turn()
 
     def gameLogic(self, event):
-        """Zentraler Ablauf der Spiellogik ruft die einzelnen Schritte auf."""
+        """
+        Führt die Spiellogik basierend auf dem Ereignis aus und ruft die entsprechenden Methoden auf.
+
+        Input:
+        - event: Das aktuelle Ereignis, das verarbeitet werden soll.
+        """
         mouse_pos = event.pos
 
         if self.is_over_deck(mouse_pos):
@@ -178,24 +232,37 @@ class Gameplay_Automated(State):
                         self.end_turn()
 
     def start_last_turn(self):
-        """Aktiviert den letzten Zug für alle Spieler."""
+        """
+        Aktiviert den letzten Zug für alle Spieler, wenn er noch nicht aktiv ist.
+
+        Input:
+        - Keine.
+
+        Output:
+        - Keine.
+        """
         if not self.last_turn_active:
             self.last_turn_active = True
             self.last_turn_player = self.current_player
             self.turn_counter = 0
             print(f"Spieler {self.last_turn_player + 1} hat alle Karten umgedreht. Letzte Runde beginnt!")
 
-        self.end_turn()  # Setze den Zug fort
+        # Setze den Zug fort
+        self.end_turn()
 
     def handle_deck_click(self):
-        """Handles the event when the deck is clicked."""
+        """
+        Behandelt das Ereignis, wenn das Deck angeklickt wird.
+        """
         top_card = self.deck.draw(self.stack)
         if top_card:
             top_card.visible = True
             self.save_top_card_value()
 
     def handle_stack_click(self):
-        """Wählt die oberste Karte des Stacks aus oder tauscht Karten, wenn eine Handkarte ausgewählt wird."""
+        """
+        Wählt die oberste Karte des Stacks aus oder tauscht Karten, wenn eine Handkarte ausgewählt wird.
+        """
         if not self.stack_clicked:
             self.stack_clicked = True
             self.selected_stack_card = self.stack.peek()
@@ -214,7 +281,12 @@ class Gameplay_Automated(State):
                 self.stack_clicked = False
 
     def swap_with_stack(self, selected_card_index):
-        """Tauscht die ausgewählte Karte des Spielers mit der obersten Karte des Stacks."""
+        """
+        Tauscht die ausgewählte Karte des Spielers mit der obersten Karte des Stacks.
+
+        Input:
+        - selected_card_index: Der Index der ausgewählten Karte in der Hand des Spielers.
+        """
         player_card = self.players_hands[self.current_player][selected_card_index]
         top_stack_card = self.stack.draw()
         if top_stack_card:
@@ -226,14 +298,18 @@ class Gameplay_Automated(State):
         self.check_three_in_a_row(self.current_player)
 
     def turn_top_card(self):
-        """Draws the top card from the deck and places it on the stack."""
+        """
+        Zieht die oberste Karte vom Deck und legt sie auf den Stack.
+        """
         top_card = self.deck.draw(self.stack)
         if top_card:
             top_card.visible = True
             self.save_top_card_value()
 
     def save_top_card_value(self):
-        """Updates the saved value of the top card on the stack."""
+        """
+        Aktualisiert den gespeicherten Wert der obersten Karte auf dem Stack.
+        """
         top_card = self.stack.peek()
         if top_card:
             self.saved_value = top_card.value
@@ -241,7 +317,9 @@ class Gameplay_Automated(State):
             self.saved_value = None
 
     def automated_initial_turn(self):
-        """Automatische Aufdeckung von zwei Karten durch einen KI-Spieler in der Anfangsrunde."""
+        """
+        Automatische Aufdeckung von zwei Karten durch einen KI-Spieler in der Anfangsrunde.
+        """
         visible_cards = [card for card in self.players_hands[self.current_player] if card.visible]
         if len(visible_cards) < 2:
             hidden_cards = [index for index, card in enumerate(self.players_hands[self.current_player]) if
@@ -259,7 +337,9 @@ class Gameplay_Automated(State):
                 self.determine_starting_player()
 
     def automated_player_turn_easy(self):
-        """Einfache Automatisierung für den Zug eines Bots."""
+        """
+        Einfache Automatisierung für den Zug eines Bots.
+        """
         if self.current_player != 0:
             hand = self.players_hands[self.current_player]
             hidden_cards = [index for index, card in enumerate(hand) if not card.visible]
@@ -317,7 +397,15 @@ class Gameplay_Automated(State):
             print(f"Automated player {self.current_player} ends turn")
 
     def automated_player_turn_medium(self):
-        """Automatisierung für den Zug eines Bots im Medium-Schwierigkeitsgrad."""
+        """
+        Automatisierung für den Zug eines Bots im Medium-Schwierigkeitsgrad.
+
+        Input:
+        - Keine.
+
+        Output:
+        - Keine.
+        """
         if self.current_player != 0:
             hand = self.players_hands[self.current_player]
             hidden_cards = [index for index, card in enumerate(hand) if not card.visible]
@@ -329,6 +417,7 @@ class Gameplay_Automated(State):
                 if -2 <= value_top_card <= 4:
                     self.select_stack = True
 
+                    # Überprüft, ob sichtbare Karten im Handbereich einen bestimmten Wertebereich haben
                     open_cards = [index for index, card in enumerate(hand) if card.visible and 5 <= card.value <= 12]
 
                     if open_cards:
@@ -340,6 +429,7 @@ class Gameplay_Automated(State):
                             self.swap_with_stack(selected_card_index)
 
                     column_values = [card.value for card in visible_cards]
+                    # Entfernt Karten aus der Spalte, wenn bereits zwei Karten mit bestimmten negativen Werten vorhanden sind
                     if column_values.count(-2) >= 2 or column_values.count(-1) >= 2:
                         self.remove_card_from_column_with_value(column_values, -2, -1)
 
@@ -372,6 +462,7 @@ class Gameplay_Automated(State):
                             prev_open_cards = [card for card in self.players_hands[prev_player] if card.visible]
                             prev_column_values = [card.value for card in prev_open_cards]
 
+                            # Überprüft, ob der Wert der obersten Karte des Stacks in den offenen Karten vorhanden ist
                             if any(card.value == value_top_card for card in open_cards):
                                 if not any(v in column_values for v in [-2, -1, -3]):
                                     if any(card.value == value_top_card for card in prev_open_cards):
@@ -382,6 +473,7 @@ class Gameplay_Automated(State):
                             else:
                                 self.open_random_hidden_card()
 
+                            # Tauscht die Karte mit dem höchsten Wert, wenn der Spieler mindestens 11 Karten aufgedeckt hat
                             if len(open_cards) >= 11:
                                 self.swap_with_highest_value_card_if_needed()
 
@@ -394,7 +486,9 @@ class Gameplay_Automated(State):
             print(f"Automated player {self.current_player} ends turn")
 
     def automated_player_turn_hard(self):
-        """Automatisierung für den Zug eines Bots im Hard-Schwierigkeitsgrad mit Priorisierung des Tauschs höherer Karten."""
+        """
+        Automatisierung für den Zug eines Bots im Hard-Schwierigkeitsgrad mit Priorisierung des Tauschs höherer Karten.
+        """
         if self.current_player != 0:
             hand = self.players_hands[self.current_player]
             hidden_cards = [index for index, card in enumerate(hand) if not card.visible]
@@ -446,7 +540,13 @@ class Gameplay_Automated(State):
                 self.end_turn()
 
     def remove_card_from_column_with_value(self, column_values, *values):
-        """Entfernt eine Karte aus einer Spalte, wenn bereits zwei Karten mit den gleichen negativen Werten vorhanden sind."""
+        """
+        Entfernt eine Karte aus einer Spalte, wenn bereits zwei Karten mit den gleichen negativen Werten vorhanden sind.
+
+        Input:
+        - column_values: Liste der Werte aller Karten in der Spalte.
+        - values: Die negativen Werte, die überprüft werden sollen.
+        """
         for value in values:
             if column_values.count(value) >= 2:
                 for index, card in enumerate(column_values):
@@ -455,8 +555,16 @@ class Gameplay_Automated(State):
                         break
 
     def get_card_index_to_swap(self, hand, value_top_card):
-        """Findet den besten Kartenindex in der Hand, um ihn mit der obersten Karte des Stapels zu tauschen."""
-        # Suche nach der Karte, die am wenigsten Punkte einbringt oder eine Spalte komplettiert
+        """
+        Findet den besten Kartenindex in der Hand, um ihn mit der obersten Karte des Stapels zu tauschen.
+
+        Input:
+        - hand: Die Liste der Karten in der Hand des Spielers.
+        - value_top_card: Der Wert der obersten Karte des Stapels.
+
+        Output:
+        - Der Index der besten Karte zum Tauschen.
+        """
         visible_cards = [index for index, card in enumerate(hand) if card.visible]
         if visible_cards:
             # Wähle die Karte mit dem größten Unterschied zur Stapelkarte, um hohe Punktwerte zu minimieren
@@ -467,7 +575,9 @@ class Gameplay_Automated(State):
             return random.choice(range(len(hand)))
 
     def open_random_hidden_card(self):
-        """Deckt eine zufällige versteckte Karte in der Hand auf."""
+        """
+        Deckt eine zufällige versteckte Karte in der Hand auf.
+        """
         hand = self.players_hands[self.current_player]
         hidden_cards = [index for index, card in enumerate(hand) if not card.visible]
         if hidden_cards:
@@ -477,7 +587,9 @@ class Gameplay_Automated(State):
                 f"Automated player {self.current_player} reveals card at index {selected_card_index} with value {hand[selected_card_index].value}")
 
     def swap_with_highest_value_card_if_needed(self):
-        """Tauscht die Karte mit dem höchsten Wert, wenn der Spieler in einer kritischen Phase ist (z.B. 11 Karten aufgedeckt)."""
+        """
+        Tauscht die Karte mit dem höchsten Wert, wenn der Spieler in einer kritischen Phase ist (z.B. 11 Karten aufgedeckt).
+        """
         hand = self.players_hands[self.current_player]
         visible_cards = [card for card in hand if card.visible]
 
@@ -492,38 +604,58 @@ class Gameplay_Automated(State):
                 f"Automated player {self.current_player} swaps card at index {highest_value_index} with value {highest_value_card.value}")
 
     def select_best_card_for_swap(self, hand, value_top_card):
-        """Wählt die beste Karte zum Tauschen basierend auf dem Wert der obersten Karte vom Stapel."""
-        # Sortiere die offenen Karten nach Wert, um die beste Karte auszuwählen
+        """
+        Wählt die beste Karte zum Tauschen basierend auf dem Wert der obersten Karte vom Stapel.
+
+        Parameter:
+        - hand: Liste von Karten, die die Hand des Spielers repräsentiert
+        - value_top_card: Wert der obersten Karte des Stapels
+
+        Rückgabewert:
+        - Index der besten Karte zum Tauschen
+        """
         visible_cards = [index for index, card in enumerate(hand) if card.visible]
         if visible_cards:
-            # Bevorzugen Karten, die den Wert der obersten Karte des Stapels ergänzen
             best_card_index = min(visible_cards, key=lambda i: abs(hand[i].value - value_top_card))
             return best_card_index
         else:
             return random.choice(range(len(hand)))
 
     def player_has_lowest_score(self, player_index):
-        """Prüft, ob der Spieler den niedrigsten Punktestand hat."""
-        current_player_score = self.Calculate_player_score(self.players_hands[player_index])
+        """
+        Prüft, ob der angegebene Spieler den niedrigsten Punktestand hat.
+
+        Parameter:
+        - player_index: Index des Spielers
+
+        Rückgabewert:
+        - Wahrheitswert: True, wenn der Spieler den niedrigsten Punktestand hat, sonst False
+        """
+        current_player_score = self.Calculate_player_score(player_index)
         other_players_scores = [self.Calculate_player_score(hand) for i, hand in enumerate(self.players_hands) if
                                 i != player_index]
         return current_player_score <= min(other_players_scores)
 
     def get_highest_visible_card_index(self, hand):
-        """Ermittelt den Index der höchsten sichtbaren Karte."""
-        # Finde die sichtbaren Karten
+        """
+        Ermittelt den Index der höchsten sichtbaren Karte in der Hand des Spielers.
+
+        Parameter:
+        - hand: Liste von Karten, die die Hand des Spielers repräsentiert
+
+        Rückgabewert:
+        - Index der höchsten sichtbaren Karte
+        """
         visible_cards = [card for card in hand if card.visible]
-
-        # Höchste Karte unter den sichtbaren Karten ermitteln
         highest_value = max(visible_cards, key=lambda card: card.value).value
-
-        # Finde den Index der höchsten sichtbaren Karte
         for index, card in enumerate(hand):
             if card.value == highest_value and card.visible:
                 return index
 
     def automated_player_turn(self):
-        """Ruft die entsprechende Funktion für den aktuellen Schwierigkeitsgrad des Bots auf."""
+        """
+        Ruft die entsprechende Funktion für den aktuellen Schwierigkeitsgrad des Bots auf.
+        """
         bot_difficulty = self.persist.get('bot_difficulties', ["Medium"] * self.player_count)[self.current_player]
         if bot_difficulty == "Easy":
             self.automated_player_turn_easy()
@@ -534,8 +666,17 @@ class Gameplay_Automated(State):
         else:
             raise ValueError("Unbekannter Schwierigkeitsgrad")
 
-    #für maus steuerung
     def get_card_at_pos(self, player_index, pos):
+        """
+        Bestimmt, welche Karte sich an der angegebenen Position befindet.
+
+        Parameter:
+        - player_index: Index des Spielers
+        - pos: Position der Maus (x, y)
+
+        Rückgabewert:
+        - Index der Karte an der Position oder None, wenn keine Karte gefunden wird
+        """
         global start_x, start_y
         card_width, card_height, card_gap = self.get_card_measurements()
         rows = 3
@@ -556,11 +697,10 @@ class Gameplay_Automated(State):
 
         for row in range(rows):
             for col in range(cols):
-                if player_index == 0 or player_index == 1 or player_index == 2 or player_index == 3:  # Spieler unten oder oben
+                if player_index == 0 or player_index == 1 or player_index == 2 or player_index == 3:
                     x = start_x + col * (card_width + card_gap)
                     y = start_y + row * (card_height + card_gap)
                     card_rect = pygame.Rect(x, y, card_width, card_height)
-
 
                 if card_rect.collidepoint(pos):
                     return row * cols + col
@@ -568,7 +708,15 @@ class Gameplay_Automated(State):
         return None
 
     def is_over_deck(self, pos):
-        """Überprüft, ob die Maus über dem Deck ist."""
+        """
+        Überprüft, ob die Maus über dem Deck ist.
+
+        Parameter:
+        - pos: Position der Maus (x, y)
+
+        Rückgabewert:
+        - Wahrheitswert: True, wenn die Maus über dem Deck ist, sonst False
+        """
         card_width, card_height, card_gap = self.get_card_measurements()
         x = self.screen.get_width() / 2 - (card_width + card_gap / 2)
         y = self.screen.get_height() / 2 - card_height / 2
@@ -576,53 +724,74 @@ class Gameplay_Automated(State):
         return deck_rect.collidepoint(pos)
 
     def is_over_stack(self, pos):
-        """Überprüft, ob die Maus über dem Stack ist."""
+        """
+        Überprüft, ob die Maus über dem Stack ist.
+
+        Parameter:
+        - pos: Position der Maus (x, y)
+
+        Rückgabewert:
+        - Wahrheitswert: True, wenn die Maus über dem Stack ist, sonst False
+        """
         card_width, card_height, card_gap = self.get_card_measurements()
         x = self.screen.get_width() / 2 + card_gap / 2
         y = self.screen.get_height() / 2 - card_height / 2
         stack_rect = pygame.Rect(x, y, card_width, card_height)
         return stack_rect.collidepoint(pos)
-#weitere Funktionen
+
     def end_turn(self):
-        """Wechselt zum nächsten Spieler und überprüft, ob die Runde endet."""
+        """
+        Wechselt zum nächsten Spieler und überprüft, ob die Runde endet.
+
+        Wenn der letzte Zug abgeschlossen ist und alle Spieler einmal dran waren, endet die Runde.
+        Ansonsten wird der nächste Spieler aktiviert und der Zugstatus zurückgesetzt.
+        """
         if self.last_turn_active:
-            # Erhöhe den Zähler, wenn alle Spieler noch einmal an der Reihe waren
             self.turn_counter += 1
             print(f"Spieler {self.current_player + 1} hat seinen letzten Zug gemacht.")
 
-            # Wenn alle Spieler einschließlich des Startspielers des letzten Zuges dran waren
             if self.turn_counter >= self.player_count:
                 print("Letzter Zug abgeschlossen. Runde endet.")
-                self.round_over()  # Runde beenden
+                self.round_over()
                 return
 
-        # Zum nächsten Spieler wechseln
         self.current_player = (self.current_player + 1) % self.player_count
         self.stack_clicked = False
         self.deck_clicked = False
         self.deck_action_taken = False
 
     def check_all_cards_visible(self, player_index):
-        """Überprüft, ob alle Karten des aktuellen Spielers aufgedeckt sind."""
+        """
+        Überprüft, ob alle Karten des aktuellen Spielers aufgedeckt sind.
+
+        Parameter:
+        - player_index: Index des Spielers
+
+        Rückgabewert:
+        - Wahrheitswert: True, wenn alle Karten aufgedeckt sind, sonst False
+        """
         all_visible = all(card.visible for card in self.players_hands[player_index])
 
         if all_visible and self.first_to_finish is None:
-            # Speichere den ersten Spieler, der alle Karten umgedreht hat
-            self.first_to_finish = player_index + 1  # +1 um den Spieler 1-basiert anzugeben
-            self.persist['first_to_finish'] = self.first_to_finish  # Speichere dies in self.persist
+            self.first_to_finish = player_index + 1
+            self.persist['first_to_finish'] = self.first_to_finish
 
         return all_visible
 
     def check_three_in_a_row(self, player_index):
-        """Überprüft, ob drei gleiche Karten in einer vertikalen Reihe des angegebenen Spielers vorhanden sind und
-        alle hervorgehoben sind."""
+        """
+        Überprüft, ob der angegebene Spieler drei gleiche Karten in einer vertikalen Reihe hat,
+        die alle sichtbar sind.
+
+        Parameter:
+        - player_index: Index des Spielers
+        """
         hand = self.players_hands[player_index]
         rows = 3
         cols = 4
 
-        # Überprüfe alle möglichen 3er-Reihen vertikal
         for col in range(cols):
-            for row in range(rows - 2):  # Es gibt nur rows - 2 Möglichkeiten, eine 3er-Reihe zu beginnen
+            for row in range(rows - 2):
                 index1 = row * cols + col
                 index2 = (row + 1) * cols + col
                 index3 = (row + 2) * cols + col
@@ -638,12 +807,13 @@ class Gameplay_Automated(State):
                     if card1.value == card2.value == card3.value and -2 <= card1.value and card1.visible and card2.visible and card3.visible:
                         remove_three_in_a_row([card1, card2, card3])
 
-
-        #alle draw funktionen
-
-#alle draw funktionen
     def draw(self, surface):
-        """Zeichnet das Spielfeld, den Stapel, das Deck und die Karten der Spieler."""
+        """
+        Zeichnet das Spielfeld, den Stapel, das Deck und die Karten der Spieler auf den Bildschirm.
+
+        Parameter:
+        - surface: Pygame-Oberfläche, auf der gezeichnet wird
+        """
         surface.fill(pygame.Color("blue"))
 
         for i in range(self.player_count):
@@ -655,7 +825,9 @@ class Gameplay_Automated(State):
         pygame.display.flip()
 
     def draw_deck(self):
-        """Zeichnet das Deck auf den Bildschirm."""
+        """
+        Zeichnet das Deck auf den Bildschirm.
+        """
         card_width, card_height, card_gap = self.get_card_measurements()
         x = self.screen.get_width() / 2 - (card_width + card_gap / 2)
         y = self.screen.get_height() / 2 - card_height / 2
@@ -664,7 +836,9 @@ class Gameplay_Automated(State):
         self.screen.blit(card_surface, (x, y))
 
     def draw_stack(self):
-        """Zeichnet den Stapel auf den Bildschirm."""
+        """
+        Zeichnet den Stapel auf den Bildschirm.
+        """
         card_width, card_height, card_gap = self.get_card_measurements()
         x = self.screen.get_width() / 2 + card_gap / 2
         y = self.screen.get_height() / 2 - card_height / 2
@@ -676,7 +850,12 @@ class Gameplay_Automated(State):
             self.screen.blit(card_surface, (x, y))
 
     def draw_player_hand(self, player_index):
-        """Zeichnet die Kartenhand des Spielers auf den Bildschirm."""
+        """
+        Zeichnet die Kartenhand des Spielers auf den Bildschirm.
+
+        Parameter:
+        - player_index: Index des Spielers
+        """
         global start_x, start_y, rotation_angle
         card_width, card_height, card_gap = self.get_card_measurements()
         rows = 3
@@ -689,7 +868,7 @@ class Gameplay_Automated(State):
         elif player_index == 1:
             start_x = card_gap
             start_y = self.screen.get_height() / 2 - (cols / 2) * (card_width + card_gap) + card_gap
-            rotation_angle = 0  # Gleiche Ausrichtung wie Spieler 0
+            rotation_angle = 0
         elif player_index == 2:
             start_x = self.screen.get_width() / 2 - (cols / 2) * (card_width + card_gap)
             start_y = card_gap
@@ -697,7 +876,7 @@ class Gameplay_Automated(State):
         elif player_index == 3:
             start_x = self.screen.get_width() - rows * (card_height + card_gap)
             start_y = self.screen.get_height() / 2 - (cols / 2) * (card_width + card_gap)
-            rotation_angle = 0  # Gleiche Ausrichtung wie Spieler 0
+            rotation_angle = 0
 
         for row in range(rows):
             for col in range(cols):
@@ -705,16 +884,14 @@ class Gameplay_Automated(State):
                 card = self.players_hands[player_index][index]
 
                 if card.elim:
-                    continue  # Überspringt die eliminierte Karte
+                    continue
 
                 if player_index == 0 or player_index == 1 or player_index == 2 or player_index == 3:
                     x = start_x + col * (card_width + card_gap)
                     y = start_y + row * (card_height + card_gap)
 
-
                 card_image = card.get_image()
 
-                # Anpassung der Skalierung, wenn die Karte markiert ist
                 scale = 1.1 if card.highlighted else 1.0
                 card_width_scaled = int(card_width * scale)
                 card_height_scaled = int(card_height * scale)
@@ -726,7 +903,15 @@ class Gameplay_Automated(State):
                 self.screen.blit(card_surface, (x, y))
 
     def Calculate_player_score(self, player_index):
-        """Berechnet die Punktzahl eines Spielers basierend auf den offenen Karten."""
+        """
+        Berechnet die Punktzahl eines Spielers basierend auf den offenen Karten.
+
+        Parameter:
+        - player_index: Index des Spielers
+
+        Rückgabewert:
+        - Punktzahl des Spielers
+        """
         player_score = 0
         for card in self.players_hands[player_index]:
             if card.visible and not card.elim:
@@ -734,7 +919,9 @@ class Gameplay_Automated(State):
         return player_score
 
     def draw_player_score(self):
-        """Zeigt dauerhaft die Punktzahl aller Spieler rechts neben der Spielerhand an."""
+        """
+        Zeigt dauerhaft die Punktzahl aller Spieler rechts neben der Spielerhand an.
+        """
         for i in range(self.player_count):
 
             player_score = self.Calculate_player_score(i)
@@ -743,11 +930,9 @@ class Gameplay_Automated(State):
             else:
                 player_name = self.bot_names[i - 1] if i - 1 < len(self.bot_names) else f"Bot {i}"
 
-            # Render the text for the score and name
             score_text = self.font.render(f"Score: {player_score}", True, pygame.Color("white"))
             name_text = self.font.render(player_name, True, pygame.Color("yellow"))
 
-            # Berechne die Position des Textes nahe der Spielerhand
             if i == 0:  # Spieler unten
                 x = self.screen.get_width() / 2 + 2 * (self.card_width + self.card_gap)
                 y = self.screen.get_height() - 2 * (self.card_height + self.card_gap)
@@ -769,23 +954,26 @@ class Gameplay_Automated(State):
                 rotated_score_text = score_text
                 rotated_name_text = name_text
 
-            # Draw name above the score
-            self.screen.blit(rotated_name_text, (x, y - 30))  # Adjust y position for name
+            self.screen.blit(rotated_name_text, (x, y - 30))
             self.screen.blit(rotated_score_text, (x, y))
 
     def round_over(self):
-        """Wechselt den Spielzustand zu 'Round Summary' und berechnet die Punkte."""
-        # 1. Aufdecken aller noch nicht aufgedeckten Karten aller Spieler
+        """
+        Wechselt den Spielzustand zu 'Round Summary' und berechnet die Punkte.
+
+        Ablauf:
+        1. Alle noch nicht aufgedeckten Karten aller Spieler aufdecken
+        2. Bildschirm aktualisieren und 5 Sekunden pausieren
+        3. Punkte berechnen und Zustand auf 'A_SCOREBOARD' setzen
+        """
         for i in range(self.player_count):
             for card in self.players_hands[i]:
                 if not card.visible:
                     self.deck.turn_card(card)
 
-        # 2. Pause für 5 Sekunden einfügen
-        self.draw(self.screen)  # Aktualisiert den Bildschirm, damit die Spieler die aufgedeckten Karten sehen
+        self.draw(self.screen)
         time.sleep(5)
 
-        # 3. Berechne die Punkte und wechsle den Zustand
         current_round_score = []
         for i in range(self.player_count):
             score = self.Calculate_player_score(i)

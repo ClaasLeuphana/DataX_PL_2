@@ -20,26 +20,33 @@ from GameAssets import GameAssets
 
 class Main:
     def __init__(self):
+        """
+        Initialisiert das Hauptspiel, die Bildschirmgröße, die GameAssets und die Spielzustände.
+        Es stellt sicher, dass Pygame initialisiert wird und die erforderlichen Zustände und Assets geladen sind.
+
+        Input:
+        - Keine expliziten Eingaben, aber es werden Ressourcen geladen.
+
+        Output:
+        - Initialisierte GameAssets und Spielzustände, Spiel läuft im "MENU"-Zustand.
+        """
+
         pygame.init()
 
-        # Initialisiere die GameAssets
-        self.assets = GameAssets()  # Erstellen einer Instanz von GameAssets
+        self.assets = GameAssets()
 
-
-
-        # Verwende Bildschirminformationen, um die Größe des Fensters zu bestimmen
         self.screen_info = pygame.display.Info()
         self.screen = pygame.display.set_mode(
             (self.screen_info.current_w, self.screen_info.current_h - 50),
             pygame.RESIZABLE
         )
 
-        pygame.display.set_caption("Mein Spiel")  # Optional: Setze den Fenstertitel
+        pygame.display.set_caption("SkyJo a DataX Project")
 
         self.clock = pygame.time.Clock()
         self.done = False
 
-        # Zustände initialisieren
+        # Zustände (States) initialisieren. Jeder Zustand repräsentiert eine Phase des Spiels
         states = {
             "MENU": Menu(assets=self.assets),
             "PLAYER_SELECT": PlayerSelect(assets=self.assets),
@@ -51,40 +58,55 @@ class Main:
             "CLIENT_LOBBY": ClientLobby(assets=self.assets),
             "LOCAL": Local(assets=self.assets),
             "SCOREBOARD": Scoreboard(assets=self.assets),
-            "A_SCOREBOARD":A_Scoreboard(assets=self.assets),
+            "A_SCOREBOARD": A_Scoreboard(assets=self.assets),
             "GAMEPLAY": Gameplay(assets=self.assets),
             "GAMEPLAY_AUTOMATED": Gameplay_Automated(assets=self.assets),
             'GAMEOVER': GameOver(assets=self.assets),
             "A_GAMEOVER": A_Gameover(assets=self.assets)
         }
 
-        # Spielinstanz erstellen
         self.game = Game(self.screen, states, "MENU")
 
     def run(self):
+        """
+        Hauptspieldurchlauf. Steuert den Spielzyklus, verarbeitet Eingaben, aktualisiert den Zustand
+        und zeichnet die Grafiken.
+
+        Input:
+        - Keine direkten Eingaben, aber es werden Ereignisse von Pygame erfasst (z.B. Tastendrücke, Fenstergröße).
+
+        Output:
+        - Aktualisierte Spiellogik und -darstellung. Das Spiel läuft, bis "done" auf True gesetzt wird.
+        """
+
         while not self.done:
-            dt = self.clock.tick(60) / 1000  # Framerate auf 60 FPS begrenzen
+            dt = self.clock.tick(60) / 1000
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.done = True
                 elif event.type == pygame.VIDEORESIZE:
                     self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
-                    self.game.resize(event.w, event.h)  # Größe anpassen
+                    self.game.resize(event.w, event.h)
                 self.game.get_event(event)
 
-            # Check if the current state or the game itself requests to quit
             if self.game.done or self.game.quit:
                 self.done = True
 
             self.game.update(dt)
             self.screen.fill((0, 0, 0))
+
             self.game.draw(self.screen)
+
             pygame.display.flip()
 
         pygame.quit()
 
 
 if __name__ == "__main__":
+    """
+    Startpunkt des Programms. Erstellt eine Instanz der Main-Klasse und startet das Spiel.
+    """
+
     main = Main()
     main.run()
-
