@@ -80,6 +80,7 @@ class GameAssets:
         self.Bot2 = load_image("Bot_2.png")
         self.Bot3 = load_image("Bot_3.png")
         self.Player = load_image("Player.png")
+        self.Skyjo = load_image("Skyjo.png")
 
         self.bot_icons = [
             load_image("Bot_1.png"),
