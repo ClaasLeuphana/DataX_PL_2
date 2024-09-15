@@ -12,8 +12,6 @@ from States.Rules import Rules
 from States.options import Options
 from States.gamemode import Gamemode
 from States.local import Local
-from States.host_lobby import HostLobby
-from States.client_lobby import ClientLobby
 from Game import Game
 from GameAssets import GameAssets
 
@@ -54,8 +52,6 @@ class Main:
             "RULES": Rules(assets=self.assets),
             "OPTIONS": Options(assets=self.assets),
             "GAMEMODE": Gamemode(assets=self.assets),
-            "HOST_LOBBY": HostLobby(assets=self.assets),
-            "CLIENT_LOBBY": ClientLobby(assets=self.assets),
             "LOCAL": Local(assets=self.assets),
             "SCOREBOARD": Scoreboard(assets=self.assets),
             "A_SCOREBOARD": A_Scoreboard(assets=self.assets),
